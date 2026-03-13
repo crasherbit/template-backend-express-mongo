@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "docker compose up -d mongo && NODE_ENV=dev nodemon ./src/index.js",
     "start": "node ./src/index.js",
-    "test": "NODE_ENV=test mocha 'test/**/*.test.js'",
+    "test": "NODE_ENV=test mocha 'test/unit/**/*.test.js'",
+    "test:integration": "NODE_ENV=test mocha --timeout 10000 'test/integration/**/*.test.js'",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "docker:up": "docker compose up -d",
@@ -22,7 +23,8 @@
     "@biomejs/biome": "^2.0.0",
     "chai": "^6.0.0",
     "mocha": "^11.0.0",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
   },
   "dependencies": {
     "compression": "^1.7.4",

@@ -4,7 +4,9 @@
 
 - **mise** — gestisce Node.js, pnpm, env vars e tasks (`mise.toml`)
 - **Biome** — linting + formatting in uno (`biome.json`)
-- **Mocha + Chai** — test
+- **Mocha + Chai** — unit test
+- **Supertest** — integration test (HTTP)
+- **Bruno** — API client interattivo (collection in `bruno/`)
 
 ## Architettura: Controller → Service → DAO
 
@@ -38,18 +40,44 @@
 - `dbConnector.js` - connessione MongoDB
 - `logger.js` - Winston + express-winston
 
+### App (`src/app.js`)
+
+- Configurazione Express (middleware, router)
+- Esportata come modulo separato per consentire l'uso con Supertest
+
 ## Comandi
 
 ```bash
 mise run dev              # avvia con nodemon (NODE_ENV=dev)
 mise run start            # avvia in produzione
-mise run test             # esegui test con mocha
+mise run test             # unit test (mocha, no Docker)
+mise run test:integration # integration test (avvia mongo, testa API, smonta)
+mise run test:all         # unit + integration
 mise run lint             # check Biome (lint + format)
 mise run lint:fix         # fix Biome (lint + format)
 mise run docker:up        # avvia MongoDB in Docker
 mise run docker:down      # ferma MongoDB
 mise run setup            # setup completo (Docker + install)
 ```
+
+## Test
+
+### Unit test (`test/unit/`)
+
+- Testano service/logica pura, senza DB né server
+- `mise run test`
+
+### Integration test (`test/integration/`)
+
+- Testano le API HTTP end-to-end con Supertest
+- Avviano un server Express su porta random + collegamento a MongoDB di test
+- `mise run test:integration`
+
+### Bruno (`bruno/`)
+
+- Collection API per esplorare/debuggare a mano durante lo sviluppo
+- Aprire con Bruno: `File → Open Collection → seleziona cartella bruno/`
+- Le collection sono salvate nel repo (git-friendly)
 
 ## Aggiungere una nuova feature
 
@@ -59,6 +87,9 @@ mise run setup            # setup completo (Docker + install)
 4. Crea `src/api/v1/<feature>/controller.js` con rotte e handler piatti
 5. Aggiungi rotta in `src/api/v1/router.js`
 6. Aggiungi path in `src/utils/constants.js`
+7. Aggiungi unit test in `test/unit/api/v1/<feature>.test.js`
+8. Aggiungi integration test in `test/integration/api/v1/<feature>.test.js`
+9. Aggiungi richieste Bruno in `bruno/<feature>/`
 
 ## Convenzioni
 

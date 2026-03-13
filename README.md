@@ -29,16 +29,18 @@ Gestito interamente da [mise](https://mise.jdx.dev):
 
 ## Comandi (mise tasks)
 
-| Comando               | Descrizione                         |
-| --------------------- | ----------------------------------- |
-| `mise run dev`        | Avvia in dev con nodemon            |
-| `mise run start`      | Avvia in produzione                 |
-| `mise run test`       | Esegui test                         |
-| `mise run lint`       | Check Biome (lint + format)         |
-| `mise run lint:fix`   | Fix Biome (lint + format)           |
-| `mise run docker:up`  | Avvia MongoDB in Docker             |
-| `mise run docker:down`| Ferma MongoDB                       |
-| `mise run setup`      | Setup completo (Docker + install)   |
+| Comando                     | Descrizione                                       |
+| --------------------------- | ------------------------------------------------- |
+| `mise run dev`              | Avvia in dev con nodemon                          |
+| `mise run start`            | Avvia in produzione                               |
+| `mise run test`             | Unit test (no Docker, no server)                  |
+| `mise run test:integration` | Integration test (avvia mongo, testa API, smonta) |
+| `mise run test:all`         | Unit + integration                                |
+| `mise run lint`             | Check Biome (lint + format)                       |
+| `mise run lint:fix`         | Fix Biome (lint + format)                         |
+| `mise run docker:up`        | Avvia MongoDB in Docker                           |
+| `mise run docker:down`      | Ferma MongoDB                                     |
+| `mise run setup`            | Setup completo (Docker + install)                 |
 
 ## Architettura
 
@@ -55,6 +57,8 @@ Controller → Service → DAO → Entity (Mongoose Model)
 
 ```
 src/
+├── app.js                     # configurazione Express (middleware, router)
+├── index.js                   # entry point (server + DB)
 ├── api/v1/
 │   ├── router.js              # router principale
 │   └── product/               # feature di esempio
@@ -68,12 +72,20 @@ src/
 │   ├── constants.js           # path, roles
 │   ├── dbConnector.js         # connessione MongoDB
 │   └── logger.js              # Winston logger
-├── cron/index.js              # cron jobs
-└── index.js                   # entry point
+└── cron/index.js              # cron jobs
 config/
 └── utilsManager.js            # configurazione app
 test/
-└── api/v1/product.test.js     # test di esempio
+├── unit/                      # unit test (service, logica pura)
+│   └── api/v1/product.test.js
+└── integration/               # integration test (Supertest + MongoDB)
+    ├── setup.js               # helper avvio/spegnimento server
+    └── api/v1/product.test.js
+bruno/                         # collection Bruno (API client)
+├── bruno.json
+├── collection.bru
+├── health/
+└── product/
 ```
 
 ## API (Product)

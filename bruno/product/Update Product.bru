@@ -1,0 +1,28 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/product/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: {{productId}}
+}
+
+body:json {
+  {
+    "name": "Updated Product",
+    "price": 39.99
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.message: eq OK
+  res.body.payload.name: eq Updated Product
+}

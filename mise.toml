@@ -19,8 +19,23 @@ description = "Start production server"
 run = "node ./src/index.js"
 
 [tasks.test]
-description = "Run tests"
-run = "NODE_ENV=test pnpm exec mocha 'test/**/*.test.js'"
+description = "Run unit tests"
+run = "NODE_ENV=test pnpm exec mocha 'test/unit/**/*.test.js'"
+
+[tasks."test:integration"]
+description = "Start test MongoDB, run integration tests, stop MongoDB"
+run = """
+docker compose up -d mongo
+sleep 2
+NODE_ENV=test MONGODB_CONNSTRING=mongodb://localhost:59593/template-backend-test pnpm exec mocha --timeout 10000 'test/integration/**/*.test.js'
+TEST_EXIT=$?
+docker compose down mongo
+exit $TEST_EXIT
+"""
+
+[tasks."test:all"]
+description = "Run unit + integration tests"
+depends = ["test", "test:integration"]
 
 [tasks.lint]
 description = "Check with Biome (lint + format)"

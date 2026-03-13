@@ -1,0 +1,32 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/product
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "New Product",
+    "price": 29.99,
+    "category": "electronics",
+    "description": "A test product"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.message: eq OK
+  res.body.payload.name: eq New Product
+}
+
+script:post-response {
+  if (res.body.payload && res.body.payload._id) {
+    bru.setVar("productId", res.body.payload._id);
+  }
+}

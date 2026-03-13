@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import {
   serviceValidateCreate,
   serviceValidateUpdate,
-} from '../../../src/api/v1/product/service.js';
+} from '../../../../src/api/v1/product/service.js';
 
 describe('Product Service', () => {
   describe('serviceValidateCreate', () => {
