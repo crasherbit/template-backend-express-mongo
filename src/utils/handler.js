@@ -6,6 +6,15 @@ const sendResponse = (res, status, message, payload) => {
 };
 
 const handleError = (res, e) => {
+  if (e.name === 'ValidationError') {
+    const messages = Object.values(e.errors).map((err) => err.message);
+    return sendResponse(res, 400, 'Validation Error', messages);
+  }
+
+  if (e.name === 'CastError') {
+    return sendResponse(res, 400, 'Invalid ID format', e.message);
+  }
+
   if (!(e instanceof createHttpError.HttpError)) {
     e = createHttpError.InternalServerError();
   }

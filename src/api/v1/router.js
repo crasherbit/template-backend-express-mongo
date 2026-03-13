@@ -1,5 +1,6 @@
 import express from 'express';
 import { Path } from '../../utils/constants.js';
+import { order } from './order/controller.js';
 import { product } from './product/controller.js';
 
 export const router = express.Router();
@@ -13,3 +14,4 @@ router.get('/health', (_req, res) => {
 });
 
 router.use(Path.PRODUCT, product);
+router.use(Path.ORDER, order);

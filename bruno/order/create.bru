@@ -1,0 +1,23 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/order
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "products": [
+      {
+        "productId": "60c72b2f9b1d8b001c8e4d1a",
+        "quantity": 2,
+        "priceAtPurchase": 20
+      }
+    ]
+  }
+}

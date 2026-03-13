@@ -1,83 +1,83 @@
-# Template Backend Express + Mongoose
+# Express + Mongoose Backend Template
 
-Template per microservizi Node.js con Express e Mongoose.
+Template for Node.js microservices with Express and Mongoose.
 
 ## Quick Start
 
 ```bash
-# Requisiti: mise (https://mise.jdx.dev), Docker
+# Requirements: mise (https://mise.jdx.dev), Docker
 
-# 1. Installa Node.js + pnpm automaticamente
+# 1. Install Node.js + pnpm automatically
 mise install
 
-# 2. Setup completo (Docker MongoDB + dipendenze)
+# 2. Full setup (Docker MongoDB + dependencies)
 mise run setup
 
-# 3. Avvia in dev
+# 3. Start in dev mode
 mise run dev
 ```
 
-L'app parte su `http://localhost:3000`. Health check: `GET /api/v1/health`.
+The app starts on `http://localhost:3000`. Health check: `GET /api/v1/health`.
 
 ## Tooling
 
-Gestito interamente da [mise](https://mise.jdx.dev):
+Fully managed by [mise](https://mise.jdx.dev):
 
-- **Node.js 24** + **pnpm** — installati automaticamente
-- **Biome** — linting + formatting (sostituisce ESLint + Prettier)
-- **Env vars** — caricati automaticamente da `.env.develop`
+- **Node.js 24** + **pnpm** — installed automatically
+- **Biome** — linting + formatting (replaces ESLint + Prettier)
+- **Env vars** — loaded automatically from `.env.develop`
 
-## Comandi (mise tasks)
+## Commands (mise tasks)
 
-| Comando                     | Descrizione                                       |
+| Command                     | Description                                       |
 | --------------------------- | ------------------------------------------------- |
-| `mise run dev`              | Avvia in dev con nodemon                          |
-| `mise run start`            | Avvia in produzione                               |
-| `mise run test`             | Unit test (no Docker, no server)                  |
-| `mise run test:integration` | Integration test (avvia mongo, testa API, smonta) |
+| `mise run dev`              | Start in dev with nodemon                         |
+| `mise run start`            | Start in production                               |
+| `mise run test`             | Unit test (node:test, no Docker)                  |
+| `mise run test:integration` | Integration test (starts mongo, tests API, stops) |
 | `mise run test:all`         | Unit + integration                                |
-| `mise run lint`             | Check Biome (lint + format)                       |
-| `mise run lint:fix`         | Fix Biome (lint + format)                         |
-| `mise run docker:up`        | Avvia MongoDB in Docker                           |
-| `mise run docker:down`      | Ferma MongoDB                                     |
-| `mise run setup`            | Setup completo (Docker + install)                 |
+| `mise run lint`             | Biome check (lint + format)                       |
+| `mise run lint:fix`         | Biome fix (lint + format)                         |
+| `mise run docker:up`        | Start MongoDB in Docker                           |
+| `mise run docker:down`      | Stop MongoDB                                      |
+| `mise run setup`            | Full setup (Docker + install)                     |
 
-## Architettura
+## Architecture
 
 ```
 Controller → Service → DAO → Entity (Mongoose Model)
 ```
 
-- **Controller**: rotte + handler orchestratori piatti (zero logica)
-- **Service**: validazione, normalizzazione, business logic
-- **DAO**: query Mongoose
-- **Entity**: schema e model Mongoose
+- **Controller**: orchestrator of the flows, acts as an explicit "recipe" for the API linking steps one by one
+- **Service**: pure mathematical functions or strict business authorization rules
+- **DAO**: Mongoose queries (potentially mocked for Controller unit testing)
+- **Entity**: define Mongoose schema, also acting as the single authoritative layer for Payload validation minimizing duplications (e.g. no Zod/Joi)
 
-## Struttura
+## Structure
 
 ```
 src/
 ├── index.js                   # entry point (server + DB)
 ├── api/v1/
-│   ├── router.js              # router principale
-│   └── product/               # feature di esempio
+│   ├── router.js              # main router
+│   └── product/               # example feature
 │       ├── controller.js
 │       ├── service.js
 │       ├── dao.js
-│       ├── service.unit.test.js        # unit tests co-locati
-│       └── product.integration.test.js # integration tests co-locati
+│       ├── service.unit.test.js        # co-located unit tests
+│       └── product.integration.test.js # co-located integration tests
 ├── entities/
 │   └── product/index.js       # Mongoose model
 ├── utils/
-│   ├── handler.js             # wrapper handler (errori, auth)
-│   ├── constants.js           # path, roles
-│   ├── dbConnector.js         # connessione MongoDB
+│   ├── handler.js             # handler wrapper (errors, auth)
+│   ├── constants.js           # paths, roles
+│   ├── dbConnector.js         # MongoDB connection
 │   └── logger.js              # Winston logger
 └── cron/index.js              # cron jobs
 config/
-├── utilsManager.js            # configurazione app
-└── testServer.js              # helper avvio/spegnimento server integration tests
-bruno/                         # collection Bruno (API client)
+├── utilsManager.js            # app conf
+└── testServer.js              # start/stop helper server for integration tests
+bruno/                         # Bruno collection (API client)
 ├── bruno.json
 ├── collection.bru
 ├── health/
@@ -86,14 +86,20 @@ bruno/                         # collection Bruno (API client)
 
 ## API (Product)
 
-| Metodo | Endpoint            | Auth       | Descrizione       |
-| ------ | ------------------- | ---------- | ----------------- |
-| GET    | /api/v1/product     | No         | Lista prodotti    |
-| GET    | /api/v1/product/:id | No         | Singolo prodotto  |
-| POST   | /api/v1/product     | Si         | Crea prodotto     |
-| PUT    | /api/v1/product/:id | Si         | Aggiorna prodotto |
-| DELETE | /api/v1/product/:id | Si (Admin) | Elimina prodotto  |
+| Method | Endpoint                    | Auth       | Description       |
+| ------ | --------------------------- | ---------- | ----------------- |
+| GET    | /api/v1/product             | No         | List products     |
+| GET    | /api/v1/product/:id         | No         | Single product    |
+| POST   | /api/v1/product             | Yes        | Create product    |
+| PUT    | /api/v1/product/:id         | Yes        | Update product    |
+| DELETE | /api/v1/product/:id         | Yes (Admin)| Delete product    |
+| POST   | /api/v1/order               | Yes        | Process order     |
+| PATCH  | /api/v1/order/:id/status    | Yes        | Update status     |
 
-## Aggiungere una feature
+## Advanced Example (Orchestrator)
 
-Vedi `CLAUDE.md` per istruzioni dettagliate e convenzioni.
+Check `src/api/v1/order/controller.js` to see how the architecture supports complex API flows handling the order in explicit steps fully testable via Unit-Test.
+
+## Adding a feature
+
+See `CLAUDE.md` for detailed instructions and conventions.

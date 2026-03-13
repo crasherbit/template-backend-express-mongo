@@ -1,0 +1,21 @@
+meta {
+  name: Update Order Status
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/order/{{orderId}}/status
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "status": "PAID"
+  }
+}
+
+vars:pre-request {
+  orderId: 60c72b2f9b1d8b001c8e4d1a
+}

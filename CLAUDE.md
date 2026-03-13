@@ -1,100 +1,100 @@
-# Template Backend Express + Mongoose
+# Express + Mongoose Backend Template
 
 ## Tooling
 
-- **mise** — gestisce Node.js, pnpm, env vars e tasks (`mise.toml`)
-- **Biome** — linting + formatting in uno (`biome.json`)
-- **Mocha + Chai** — unit test
+- **mise** — manages Node.js, pnpm, env vars and tasks (`mise.toml`)
+- **Biome** — linting + formatting in one (`biome.json`)
+- **Mocha + Chai** — *REMOVED in favor of built-in `node:test` and `node:assert`*
 - **Supertest** — integration test (HTTP)
-- **Bruno** — API client interattivo (collection in `bruno/`)
+- **Bruno** — interactive API client (collections in `bruno/`)
 
-## Architettura: Controller → Service → DAO
+## Architecture: Controller → Service → DAO
 
 ### Controller (`src/api/v1/<feature>/controller.js`)
 
-- Definisce le rotte Express
-- Gli handler sono **orchestratori piatti**: chiamano funzioni service atomiche, funzioni utils e dao in sequenza
-- ZERO logica di business nel controller
-- Usa `handler.public()` o `handler.authenticated({ cb })` dal wrapper
+- Defines Express routes
+- **Orchestrator**: It is a true execution recipe. It invokes in order DB read functions (DAO), pure logic and business calculations (Service), business validity checks, and finally Database mutations.
+- Testable at "unit" level thanks to the independent export of `_testable` allowing testing by providing mocked DAOs.
 
 ### Service (`src/api/v1/<feature>/service.js`)
 
-- Business logic pura: validazione, normalizzazione, trasformazioni
-- Lancia `createHttpError` per errori di validazione
-- Non accede mai al database direttamente
+- Purely mathematical logic or business rules.
+- Throws errors (`createHttpError`) if the logic fails.
+- **No schema validation or manual null-checks**, RAW input data validation is completely delegated to Mongoose at database level (Caught in handler.js).
 
 ### DAO (`src/api/v1/<feature>/dao.js`)
 
-- Solo query Mongoose
-- Nessuna logica di business
-- Import del model da `src/entities/<feature>/index.js`
+- Only Mongoose queries
+- No business logic
+- Model import from `src/entities/<feature>/index.js`
 
 ### Entities (`src/entities/<feature>/index.js`)
 
-- Schema e model Mongoose
+- Mongoose schema and model
 
 ### Utils (`src/utils/`)
 
-- `handler.js` - wrapper per route handler (gestisce errori, auth)
-- `constants.js` - Path delle rotte, Roles
-- `dbConnector.js` - connessione MongoDB
+- `handler.js` - wrapper for route handlers (handles errors, auth)
+- `constants.js` - Route paths, Roles
+- `dbConnector.js` - MongoDB connection
 - `logger.js` - Winston + express-winston
 
 ### App (`src/index.js`)
 
-- Configurazione Express (middleware, router) e entry point del server
-- `initDb()` e `app.listen()` vengono bypassati quando `index.js` è importato dai test di integrazione, in modo da non sporcare lo stato dei test.
+- Express configuration (middlewares, router) and server entry point
+- `initDb()` and `app.listen()` are bypassed when `index.js` is imported by integration tests, avoiding polluting the test state.
 
-## Comandi
+## Commands
 
 ```bash
-mise run dev              # avvia con nodemon (NODE_ENV=dev)
-mise run start            # avvia in produzione
-mise run test             # unit test (mocha, no Docker)
-mise run test:integration # integration test (avvia mongo, testa API, smonta)
+mise run dev              # start with nodemon (NODE_ENV=dev)
+mise run start            # start in production
+mise run test             # unit test (node:test, no Docker)
+mise run test:integration # integration test (starts mongo, tests API, stops)
 mise run test:all         # unit + integration
-mise run lint             # check Biome (lint + format)
-mise run lint:fix         # fix Biome (lint + format)
-mise run docker:up        # avvia MongoDB in Docker
-mise run docker:down      # ferma MongoDB
-mise run setup            # setup completo (Docker + install)
+mise run lint             # Biome check (lint + format)
+mise run lint:fix         # Biome fix (lint + format)
+mise run docker:up        # start MongoDB in Docker
+mise run docker:down      # stop MongoDB
+mise run setup            # full setup (Docker + install)
 ```
 
-## Test
+## Testing
 
-### Unit test
+### Unit tests
 
-- Testano service/logica pura, senza DB né server
-- I file hanno suffisso `.unit.test.js` co-locati accanto alla feature (es. `src/api/v1/product/service.unit.test.js`)
+- Use native tools `node:test` and `node:assert` without third-party dependencies.
+- Test service functions in absolute isolation **or** Controllers (via full DAO mocks using Node's `mock` method) to verify the sequence, without ever instantiating Mongoose in memory.
+- Files have the `.unit.test.js` suffix co-located next to the feature (e.g. `src/api/v1/order/controller.unit.test.js`)
 - `mise run test`
 
-### Integration test
+### Integration tests
 
-- Testano le API HTTP end-to-end con Supertest
-- Avviano un server Express su porta random + collegamento a MongoDB di test usando `config/testServer.js`
-- I file hanno suffisso `.integration.test.js` co-locati accanto alla feature (es. `src/api/v1/product/product.integration.test.js`)
+- Test end-to-end HTTP APIs with Supertest + `node:test`
+- Start an Express server on a random port + link to a test MongoDB using `config/testServer.js`
+- Files have the `.integration.test.js` suffix co-located next to the feature (e.g. `src/api/v1/product/product.integration.test.js`)
 - `mise run test:integration`
 
 ### Bruno (`bruno/`)
 
-- Collection API per esplorare/debuggare a mano durante lo sviluppo
-- Aprire con Bruno: `File → Open Collection → seleziona cartella bruno/`
-- Le collection sono salvate nel repo (git-friendly)
+- API collection to explore/debug manually during development
+- Open with Bruno: `File → Open Collection → select bruno/ folder`
+- Collections are saved in the repo (git-friendly)
 
-## Aggiungere una nuova feature
+## Adding a new feature
 
-1. Crea model in `src/entities/<feature>/index.js`
-2. Crea `src/api/v1/<feature>/dao.js` con funzioni CRUD
-3. Crea `src/api/v1/<feature>/service.js` con validazione
-4. Crea `src/api/v1/<feature>/controller.js` con rotte e handler piatti
-5. Aggiungi rotta in `src/api/v1/router.js`
-6. Aggiungi path in `src/utils/constants.js`
-7. Aggiungi unit test in `src/api/v1/<feature>/service.unit.test.js`
-8. Aggiungi integration test in `src/api/v1/<feature>/<feature>.integration.test.js`
-9. Aggiungi richieste Bruno in `bruno/<feature>/`
+1. Create model in `src/entities/<feature>/index.js`
+2. Create `src/api/v1/<feature>/dao.js` with CRUD functions
+3. Create `src/api/v1/<feature>/service.js` with validations
+4. Create `src/api/v1/<feature>/controller.js` with routes and flat handlers
+5. Add route to `src/api/v1/router.js`
+6. Add path to `src/utils/constants.js`
+7. Add unit tests in `src/api/v1/<feature>/service.unit.test.js`
+8. Add integration tests in `src/api/v1/<feature>/<feature>.integration.test.js`
+9. Add Bruno requests in `bruno/<feature>/`
 
-## Convenzioni
+## Conventions
 
 - ESM (`import/export`), no CommonJS
-- Biome con single quotes, trailing comma es5, semicolons always
-- File `.env.develop` per sviluppo locale (caricato automaticamente da mise)
+- Biome with single quotes, trailing comma es5, semicolons always
+- `.env.develop` file for local development (automatically loaded by mise)

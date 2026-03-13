@@ -1,43 +1,31 @@
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { describe, test } from 'node:test';
 import { serviceValidateCreate, serviceValidateUpdate } from './service.js';
 
 describe('Product Service', () => {
   describe('serviceValidateCreate', () => {
-    it('should validate and return normalized data', () => {
+    test('should return raw data mapped for Mongoose to validate', () => {
       const result = serviceValidateCreate({
         name: ' Test Product ',
         price: 9.99,
-        category: ' electronics ',
+        category: 'electronics',
       });
 
-      expect(result.name).to.equal('Test Product');
-      expect(result.price).to.equal(9.99);
-      expect(result.category).to.equal('electronics');
-      expect(result.active).to.equal(true);
-    });
-
-    it('should throw if name is missing', () => {
-      expect(() => serviceValidateCreate({ price: 10 })).to.throw(
-        'name is required'
-      );
-    });
-
-    it('should throw if price is missing', () => {
-      expect(() => serviceValidateCreate({ name: 'Test' })).to.throw(
-        'price is required'
-      );
+      assert.equal(result.name, ' Test Product ');
+      assert.equal(result.price, 9.99);
+      assert.equal(result.category, 'electronics');
     });
   });
 
   describe('serviceValidateUpdate', () => {
-    it('should return only provided fields', () => {
+    test('should return only provided fields', () => {
       const result = serviceValidateUpdate({ name: ' Updated ' });
-      expect(result).to.deep.equal({ name: 'Updated' });
+      assert.deepEqual(result, { name: ' Updated ' });
     });
 
-    it('should return empty object if no fields provided', () => {
+    test('should return empty object if no fields provided', () => {
       const result = serviceValidateUpdate({});
-      expect(result).to.deep.equal({});
+      assert.deepEqual(result, {});
     });
   });
 });

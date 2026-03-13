@@ -1,4 +1,5 @@
-import { expect } from 'chai';
+import { strict as assert } from 'node:assert';
+import { after, before, describe, test } from 'node:test';
 import supertest from 'supertest';
 import { app, startServer, stopServer } from '../../../../config/testServer.js';
 
@@ -18,96 +19,97 @@ describe('Product API — Integration', () => {
 
   // ── Health ──────────────────────────────────────────────────
   describe('GET /api/v1/health', () => {
-    it('should return status OK', async () => {
+    test('should return status OK', async () => {
       const res = await request.get('/api/v1/health');
 
-      expect(res.status).to.equal(200);
-      expect(res.body.status).to.equal('OK');
-      expect(res.body).to.have.property('uptime');
-      expect(res.body).to.have.property('serverTime');
+      assert.equal(res.status, 200);
+      assert.equal(res.body.status, 'OK');
+      assert.ok(res.body.uptime !== undefined);
+      assert.ok(res.body.serverTime !== undefined);
     });
   });
 
   // ── CREATE ─────────────────────────────────────────────────
   describe('POST /api/v1/product', () => {
-    it('should create a product', async () => {
+    test('should create a product', async () => {
       const res = await request
         .post('/api/v1/product')
         .send({ name: 'Integration Test', price: 19.99, category: 'test' });
 
-      expect(res.status).to.equal(200);
-      expect(res.body.message).to.equal('OK');
-      expect(res.body.payload).to.have.property('_id');
-      expect(res.body.payload.name).to.equal('Integration Test');
-      expect(res.body.payload.price).to.equal(19.99);
+      assert.equal(res.status, 200);
+      assert.equal(res.body.message, 'OK');
+      assert.ok(res.body.payload._id);
+      assert.equal(res.body.payload.name, 'Integration Test');
+      assert.equal(res.body.payload.price, 19.99);
 
       createdId = res.body.payload._id;
     });
 
-    it('should reject creation without name', async () => {
+    test('should reject creation without name', async () => {
       const res = await request.post('/api/v1/product').send({ price: 5 });
 
-      expect(res.status).to.equal(400);
-      expect(res.body.message).to.include('name is required');
+      assert.equal(res.status, 400);
+      assert.ok(res.body.message.includes('Validation Error'));
     });
 
-    it('should reject creation without price', async () => {
+    test('should reject creation without price', async () => {
       const res = await request
         .post('/api/v1/product')
         .send({ name: 'No Price' });
 
-      expect(res.status).to.equal(400);
-      expect(res.body.message).to.include('price is required');
+      assert.equal(res.status, 400);
+      assert.ok(res.body.message.includes('Validation Error'));
     });
   });
 
   // ── LIST ───────────────────────────────────────────────────
   describe('GET /api/v1/product', () => {
-    it('should return a list with at least one product', async () => {
+    test('should return a list with at least one product', async () => {
       const res = await request.get('/api/v1/product');
 
-      expect(res.status).to.equal(200);
-      expect(res.body.payload).to.be.an('array').that.is.not.empty;
+      assert.equal(res.status, 200);
+      assert.ok(Array.isArray(res.body.payload));
+      assert.ok(res.body.payload.length > 0);
     });
   });
 
   // ── GET ONE ────────────────────────────────────────────────
   describe('GET /api/v1/product/:id', () => {
-    it('should return the created product', async () => {
+    test('should return the created product', async () => {
       const res = await request.get(`/api/v1/product/${createdId}`);
 
-      expect(res.status).to.equal(200);
-      expect(res.body.payload._id).to.equal(createdId);
-      expect(res.body.payload.name).to.equal('Integration Test');
+      assert.equal(res.status, 200);
+      assert.equal(res.body.payload._id, createdId);
+      assert.equal(res.body.payload.name, 'Integration Test');
     });
   });
 
   // ── UPDATE ─────────────────────────────────────────────────
   describe('PUT /api/v1/product/:id', () => {
-    it('should update the product name', async () => {
+    test('should update the product name', async () => {
       const res = await request
         .put(`/api/v1/product/${createdId}`)
         .send({ name: 'Updated Name' });
 
-      expect(res.status).to.equal(200);
-      expect(res.body.payload.name).to.equal('Updated Name');
-      expect(res.body.payload.price).to.equal(19.99); // unchanged
+      assert.equal(res.status, 200);
+      assert.equal(res.body.payload.name, 'Updated Name');
+      assert.equal(res.body.payload.price, 19.99); // unchanged
     });
   });
 
   // ── DELETE ─────────────────────────────────────────────────
   describe('DELETE /api/v1/product/:id', () => {
-    it('should delete the product', async () => {
+    test('should delete the product', async () => {
       const res = await request.delete(`/api/v1/product/${createdId}`);
 
-      expect(res.status).to.equal(200);
+      assert.equal(res.status, 200);
     });
 
-    it('should no longer find the deleted product', async () => {
+    test('should no longer find the deleted product', async () => {
       const res = await request.get(`/api/v1/product/${createdId}`);
 
-      expect(res.status).to.equal(200);
-      expect(res.body.payload).to.be.null;
+      assert.equal(res.status, 200);
+      assert.equal(res.body.payload, null);
     });
   });
 });
