@@ -1,0 +1,48 @@
+[tools]
+node = "24"
+pnpm = "latest"
+
+[env]
+_.file = ".env.develop"
+
+[tasks.install]
+description = "Install dependencies"
+run = "pnpm install"
+
+[tasks.dev]
+description = "Start dev server with nodemon"
+run = "NODE_ENV=dev pnpm exec nodemon ./src/index.js"
+depends = ["docker:up", "install"]
+
+[tasks.start]
+description = "Start production server"
+run = "node ./src/index.js"
+
+[tasks.test]
+description = "Run tests"
+run = "NODE_ENV=test pnpm exec mocha 'test/**/*.test.js'"
+
+[tasks.lint]
+description = "Check with Biome (lint + format)"
+run = "pnpm exec biome check ."
+
+[tasks."lint:fix"]
+description = "Fix with Biome (lint + format)"
+run = "pnpm exec biome check --write ."
+
+[tasks.check]
+description = "Run all checks (Biome + tests)"
+depends = ["lint", "test"]
+
+[tasks."docker:up"]
+description = "Start MongoDB with Docker"
+run = "docker compose up -d"
+
+[tasks."docker:down"]
+description = "Stop MongoDB"
+run = "docker compose down"
+
+[tasks.setup]
+description = "Full local setup: Docker + install"
+depends = ["docker:up", "install"]
+run = "echo 'Ready — run: mise run dev'"

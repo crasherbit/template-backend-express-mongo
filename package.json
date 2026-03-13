@@ -1,0 +1,40 @@
+{
+  "name": "template-backend-express-mongo",
+  "version": "1.0.0",
+  "description": "Template backend Express + Mongoose con architettura Controller/Service/DAO",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "docker compose up -d mongo && NODE_ENV=dev nodemon ./src/index.js",
+    "start": "node ./src/index.js",
+    "test": "NODE_ENV=test mocha 'test/**/*.test.js'",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "chai": "^6.0.0",
+    "mocha": "^11.0.0",
+    "nodemon": "^3.1.4"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^5.0.0",
+    "express-rate-limit": "^8.0.0",
+    "express-winston": "^4.2.0",
+    "helmet": "^8.0.0",
+    "http-errors": "^2.0.0",
+    "mongoose": "^9.0.0",
+    "node-cron": "^4.0.0",
+    "winston": "^3.14.2"
+  }
+}
