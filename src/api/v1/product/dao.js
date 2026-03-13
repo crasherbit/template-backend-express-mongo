@@ -7,6 +7,9 @@ export const daoGetOne = async (id) => await Product.findById(id);
 export const daoCreateOne = async (data) => await Product.create(data);
 
 export const daoUpdateOne = async (id, data) =>
-  await Product.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  await Product.findByIdAndUpdate(id, data, {
+    returnDocument: 'after',
+    runValidators: true,
+  });
 
 export const daoDeleteOne = async (id) => await Product.findByIdAndDelete(id);

@@ -1,8 +1,5 @@
 import { expect } from 'chai';
-import {
-  serviceValidateCreate,
-  serviceValidateUpdate,
-} from './service.js';
+import { serviceValidateCreate, serviceValidateUpdate } from './service.js';
 
 describe('Product Service', () => {
   describe('serviceValidateCreate', () => {

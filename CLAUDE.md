@@ -40,10 +40,10 @@
 - `dbConnector.js` - connessione MongoDB
 - `logger.js` - Winston + express-winston
 
-### App (`src/app.js`)
+### App (`src/index.js`)
 
-- Configurazione Express (middleware, router)
-- Esportata come modulo separato per consentire l'uso con Supertest
+- Configurazione Express (middleware, router) e entry point del server
+- `initDb()` e `app.listen()` vengono bypassati quando `index.js` è importato dai test di integrazione, in modo da non sporcare lo stato dei test.
 
 ## Comandi
 
@@ -62,15 +62,17 @@ mise run setup            # setup completo (Docker + install)
 
 ## Test
 
-### Unit test (`test/unit/`)
+### Unit test
 
 - Testano service/logica pura, senza DB né server
+- I file hanno suffisso `.unit.test.js` co-locati accanto alla feature (es. `src/api/v1/product/service.unit.test.js`)
 - `mise run test`
 
-### Integration test (`test/integration/`)
+### Integration test
 
 - Testano le API HTTP end-to-end con Supertest
-- Avviano un server Express su porta random + collegamento a MongoDB di test
+- Avviano un server Express su porta random + collegamento a MongoDB di test usando `config/testServer.js`
+- I file hanno suffisso `.integration.test.js` co-locati accanto alla feature (es. `src/api/v1/product/product.integration.test.js`)
 - `mise run test:integration`
 
 ### Bruno (`bruno/`)
@@ -87,8 +89,8 @@ mise run setup            # setup completo (Docker + install)
 4. Crea `src/api/v1/<feature>/controller.js` con rotte e handler piatti
 5. Aggiungi rotta in `src/api/v1/router.js`
 6. Aggiungi path in `src/utils/constants.js`
-7. Aggiungi unit test in `test/unit/api/v1/<feature>.test.js`
-8. Aggiungi integration test in `test/integration/api/v1/<feature>.test.js`
+7. Aggiungi unit test in `src/api/v1/<feature>/service.unit.test.js`
+8. Aggiungi integration test in `src/api/v1/<feature>/<feature>.integration.test.js`
 9. Aggiungi richieste Bruno in `bruno/<feature>/`
 
 ## Convenzioni

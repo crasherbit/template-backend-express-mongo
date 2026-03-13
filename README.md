@@ -57,14 +57,15 @@ Controller → Service → DAO → Entity (Mongoose Model)
 
 ```
 src/
-├── app.js                     # configurazione Express (middleware, router)
 ├── index.js                   # entry point (server + DB)
 ├── api/v1/
 │   ├── router.js              # router principale
 │   └── product/               # feature di esempio
 │       ├── controller.js
 │       ├── service.js
-│       └── dao.js
+│       ├── dao.js
+│       ├── service.unit.test.js        # unit tests co-locati
+│       └── product.integration.test.js # integration tests co-locati
 ├── entities/
 │   └── product/index.js       # Mongoose model
 ├── utils/
@@ -74,13 +75,8 @@ src/
 │   └── logger.js              # Winston logger
 └── cron/index.js              # cron jobs
 config/
-└── utilsManager.js            # configurazione app
-test/
-├── unit/                      # unit test (service, logica pura)
-│   └── api/v1/product.test.js
-└── integration/               # integration test (Supertest + MongoDB)
-    ├── setup.js               # helper avvio/spegnimento server
-    └── api/v1/product.test.js
+├── utilsManager.js            # configurazione app
+└── testServer.js              # helper avvio/spegnimento server integration tests
 bruno/                         # collection Bruno (API client)
 ├── bruno.json
 ├── collection.bru

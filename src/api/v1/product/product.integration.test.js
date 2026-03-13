@@ -45,9 +45,7 @@ describe('Product API — Integration', () => {
     });
 
     it('should reject creation without name', async () => {
-      const res = await request
-        .post('/api/v1/product')
-        .send({ price: 5 });
+      const res = await request.post('/api/v1/product').send({ price: 5 });
 
       expect(res.status).to.equal(400);
       expect(res.body.message).to.include('name is required');
