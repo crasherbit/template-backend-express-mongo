@@ -12,7 +12,7 @@ run = "pnpm install"
 [tasks.dev]
 description = "Start dev server with nodemon"
 run = "NODE_ENV=dev pnpm exec nodemon ./src/index.js"
-depends = ["docker:up", "install"]
+depends = ["docker-mongo:up", "install"]
 
 [tasks.start]
 description = "Start production server"
@@ -35,12 +35,20 @@ description = "Run all checks (Biome + tests)"
 depends = ["lint", "test"]
 
 [tasks."docker:up"]
-description = "Start MongoDB with Docker"
+description = "Start infrastructure with Docker"
 run = "docker compose up -d"
 
 [tasks."docker:down"]
-description = "Stop MongoDB"
+description = "Stop infrastructure with Docker"
 run = "docker compose down"
+
+[tasks."docker-mongo:up"]
+description = "Start MongoDB with Docker"
+run = "docker compose up -d mongo"
+
+[tasks."docker-mongo:down"]
+description = "Stop MongoDB"
+run = "docker compose down mongo"
 
 [tasks.setup]
 description = "Full local setup: Docker + install"

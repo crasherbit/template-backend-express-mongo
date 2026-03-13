@@ -2,14 +2,14 @@ services:
   mongo:
     image: mongo:8
     ports:
-      - '59593:27017'
+      - "59593:27017"
     volumes:
       - mongo-data:/data/db
 
   app:
     build: .
     ports:
-      - '${PORT:-3000}:3000'
+      - "${PORT:-3000}:3000"
     env_file:
       - .env.develop
     environment:
