@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "docker compose up -d mongo && NODE_ENV=dev nodemon ./src/index.js",
     "start": "node ./src/index.js",
-    "test": "NODE_ENV=test mocha 'test/unit/**/*.test.js'",
-    "test:integration": "NODE_ENV=test mocha --timeout 10000 'test/integration/**/*.test.js'",
+    "test": "NODE_ENV=test mocha 'src/**/*.unit.test.js'",
+    "test:integration": "NODE_ENV=test mocha --timeout 10000 'src/**/*.integration.test.js'",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "docker:up": "docker compose up -d",
