@@ -13,7 +13,7 @@
 ### Controller (`src/api/v1/<feature>/controller.js`)
 
 - Definisce le rotte Express
-- Gli handler sono **orchestratori piatti**: chiamano service, dao in sequenza
+- Gli handler sono **orchestratori piatti**: chiamano funzioni service atomiche, funzioni utils e dao in sequenza
 - ZERO logica di business nel controller
 - Usa `handler.public()` o `handler.authenticated({ cb })` dal wrapper
 

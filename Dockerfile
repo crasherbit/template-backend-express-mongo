@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm i --omit=dev
+RUN pnpm i --prod
 
 COPY . .
 
