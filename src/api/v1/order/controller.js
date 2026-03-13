@@ -1,6 +1,11 @@
 import express from 'express';
 import { handler } from '../../../utils/handler.js';
-import { daoCreateOrder, daoGetOrder, daoGetUser, daoUpdateOrderStatus } from './dao.js';
+import {
+  daoCreateOrder,
+  daoGetOrder,
+  daoGetUser,
+  daoUpdateOrderStatus,
+} from './dao.js';
 import {
   assertOrderExists,
   assertUserCanMakeOrder,
@@ -24,7 +29,7 @@ order.patch('/:id/status', handler.authenticated({ cb: updateOrderStatus }));
  * 5. Write to DB (DAO) - Payload validation is delegated to Mongoose
  * 6. External utilities or side-effects (Email, notifications)
  * 7. Response
- * 
+ *
  * @param {import('express').Request} req
  * @returns {Promise<Object>}
  */
@@ -44,7 +49,7 @@ async function processOrder(req) {
 
   // 5. Build payload to send to DB (Service - pure)
   const orderPayload = buildOrderPayload(userId, products, totalAmount);
-  
+
   // 6. Write to DB
   const newOrder = await daoCreateOrder(orderPayload);
 
@@ -54,7 +59,7 @@ async function processOrder(req) {
 
 /**
  * Orchestrator for handling an order status update.
- * @param {import('express').Request} req 
+ * @param {import('express').Request} req
  * @returns {Promise<Object>}
  */
 async function updateOrderStatus(req) {

@@ -4,7 +4,6 @@
 
 - **mise** — manages Node.js, pnpm, env vars and tasks (`mise.toml`)
 - **Biome** — linting + formatting in one (`biome.json`)
-- **Mocha + Chai** — *REMOVED in favor of built-in `node:test` and `node:assert`*
 - **Supertest** — integration test (HTTP)
 - **Bruno** — interactive API client (collections in `bruno/`)
 

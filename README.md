@@ -24,7 +24,7 @@ The app starts on `http://localhost:3000`. Health check: `GET /api/v1/health`.
 Fully managed by [mise](https://mise.jdx.dev):
 
 - **Node.js 24** + **pnpm** — installed automatically
-- **Biome** — linting + formatting (replaces ESLint + Prettier)
+- **Biome** — linting + formatting
 - **Env vars** — loaded automatically from `.env.develop`
 
 ## Commands (mise tasks)

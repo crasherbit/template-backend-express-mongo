@@ -15,6 +15,6 @@ export const serviceValidateUpdate = (body) => {
   if (body.price !== undefined) data.price = body.price;
   if (body.category !== undefined) data.category = body.category;
   if (body.active !== undefined) data.active = body.active;
-  
+
   return data;
 };

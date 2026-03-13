@@ -2,30 +2,30 @@ import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema(
   {
-    name: { 
-      type: String, 
+    name: {
+      type: String,
       required: [true, 'name is required'],
       trim: true,
-      minlength: [3, 'name must be at least 3 characters long']
+      minlength: [3, 'name must be at least 3 characters long'],
     },
-    description: { 
-      type: String, 
+    description: {
+      type: String,
       default: '',
-      trim: true
+      trim: true,
     },
-    price: { 
-      type: Number, 
+    price: {
+      type: Number,
       required: [true, 'price is required'],
-      min: [0, 'price cannot be negative']
+      min: [0, 'price cannot be negative'],
     },
-    category: { 
-      type: String, 
+    category: {
+      type: String,
       default: '',
-      trim: true
+      trim: true,
     },
-    active: { 
-      type: Boolean, 
-      default: true 
+    active: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
