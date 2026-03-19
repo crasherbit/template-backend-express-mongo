@@ -64,14 +64,14 @@ mise run setup            # full setup (Docker + install)
 
 - Use native tools `node:test` and `node:assert` without third-party dependencies.
 - Test service functions in absolute isolation **or** Controllers (via full DAO mocks using Node's `mock` method) to verify the sequence, without ever instantiating Mongoose in memory.
-- Files have the `.unit.test.js` suffix co-located next to the feature (e.g. `src/api/v1/order/controller.unit.test.js`)
+- Files have the `.unit.test.js` suffix co-located next to the feature (e.g. `src/api/v1/order/unit.test.js`)
 - `mise run test`
 
 ### Integration tests
 
 - Test end-to-end HTTP APIs with Supertest + `node:test`
 - Start an Express server on a random port + link to a test MongoDB using `config/testServer.js`
-- Files have the `.integration.test.js` suffix co-located next to the feature (e.g. `src/api/v1/product/product.integration.test.js`)
+- Files have the `.integration.test.js` suffix co-located next to the feature (e.g. `src/api/v1/product/integration.test.js`)
 - `mise run test:integration`
 
 ### Bruno (`bruno/`)
@@ -88,8 +88,8 @@ mise run setup            # full setup (Docker + install)
 4. Create `src/api/v1/<feature>/controller.js` with routes and flat handlers
 5. Add route to `src/api/v1/router.js`
 6. Add path to `src/utils/constants.js`
-7. Add unit tests in `src/api/v1/<feature>/service.unit.test.js`
-8. Add integration tests in `src/api/v1/<feature>/<feature>.integration.test.js`
+7. Add unit tests in `src/api/v1/<feature>/unit.test.js`
+8. Add integration tests in `src/api/v1/<feature>/integration.test.js`
 9. Add Bruno requests in `bruno/<feature>/`
 
 ## Conventions

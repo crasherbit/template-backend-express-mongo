@@ -64,8 +64,8 @@ src/
 │       ├── controller.js
 │       ├── service.js
 │       ├── dao.js
-│       ├── service.unit.test.js        # co-located unit tests
-│       └── product.integration.test.js # co-located integration tests
+│       ├── unit.test.js                # co-located unit tests
+│       └── integration.test.js         # co-located integration tests
 ├── entities/
 │   └── product/index.js       # Mongoose model
 ├── utils/
