@@ -20,14 +20,14 @@ run = "node ./src/index.js"
 
 [tasks.test]
 description = "Run unit tests"
-run = "NODE_ENV=test node --test 'src/**/*.unit.test.js'"
+run = "NODE_ENV=test node --experimental-test-module-mocks --test 'src/**/unit.test.js'"
 
 [tasks."test:integration"]
 description = "Start test MongoDB, run integration tests, stop MongoDB"
 run = """
 docker compose up -d mongo
 sleep 2
-NODE_ENV=test MONGODB_CONNSTRING=mongodb://localhost:59593/template-backend-test node --test 'src/**/*.integration.test.js'
+NODE_ENV=test MONGODB_CONNSTRING=mongodb://localhost:59593/template-backend-test node --test 'src/**/integration.test.js'
 TEST_EXIT=$?
 docker compose down mongo
 exit $TEST_EXIT
