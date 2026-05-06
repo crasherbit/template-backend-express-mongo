@@ -60,6 +60,12 @@ src/
 ├── index.js                   # entry point (server + DB)
 ├── api/v1/
 │   ├── router.js              # main router
+│   ├── auth/                  # authentication (WebAuthn passkeys)
+│   │   ├── controller.js
+│   │   ├── service.js
+│   │   ├── dao.js
+│   │   ├── unit.test.js
+│   │   └── integration.test.js
 │   └── product/               # example feature
 │       ├── controller.js
 │       ├── service.js
@@ -67,13 +73,14 @@ src/
 │       ├── unit.test.js                # co-located unit tests
 │       └── integration.test.js         # co-located integration tests
 ├── entities/
+│   ├── user/index.js          # Mongoose User model (auth)
 │   └── product/index.js       # Mongoose model
 ├── utils/
-│   ├── handler.js             # handler wrapper (errors, auth)
+│   ├── handler.js             # handler wrapper (errors, JWT auth)
 │   ├── constants.js           # paths, roles
 │   ├── dbConnector.js         # MongoDB connection
 │   └── logger.js              # Winston logger
-└── cron/index.js              # cron jobs
+└── cron/index.js              # cron jobs (e.g. WebAuthn challenge cleanup)
 config/
 ├── utilsManager.js            # app conf
 └── testServer.js              # start/stop helper server for integration tests
@@ -81,8 +88,46 @@ bruno/                         # Bruno collection (API client)
 ├── bruno.json
 ├── collection.bru
 ├── health/
+├── auth/
 └── product/
 ```
+
+## Authentication
+
+WebAuthn passkeys — no passwords. Registration and login use a `begin/complete` two-step flow:
+
+1. Client calls `/begin` → server returns a challenge + `sessionId`
+2. Device performs biometric/key verification
+3. Client calls `/complete` with `sessionId` + signed response → server issues JWT cookie
+
+JWT is set as `authToken` httpOnly cookie (7 days). Protected routes require the cookie; pass `roles` to restrict to specific roles.
+
+### Required env vars
+
+| Variable | Description |
+| -------- | ----------- |
+| `JWT_SECRET` | Secret for signing JWT tokens |
+| `WEBAUTHN_RP_ID` | Relying party domain (e.g. `example.com`) |
+| `WEBAUTHN_RP_NAME` | App name shown during passkey creation |
+| `WEBAUTHN_ORIGIN` | Full origin (e.g. `https://example.com`) |
+
+### Auth endpoints
+
+| Method | Endpoint                                      | Auth | Description                              |
+| ------ | --------------------------------------------- | ---- | ---------------------------------------- |
+| POST   | /api/v1/auth/register/begin                   | No   | Start registration (returns challenge)   |
+| POST   | /api/v1/auth/register/complete                | No   | Finish registration, sets cookie, returns recovery codes |
+| POST   | /api/v1/auth/login/begin                      | No   | Start login (returns challenge)          |
+| POST   | /api/v1/auth/login/complete                   | No   | Finish login, sets cookie                |
+| POST   | /api/v1/auth/recover                          | No   | Login with recovery code                 |
+| GET    | /api/v1/auth/me                               | Yes  | Current user data                        |
+| POST   | /api/v1/auth/logout                           | Yes  | Clear cookie (204)                       |
+| POST   | /api/v1/auth/recovery-codes/regenerate/begin  | Yes  | Start recovery code regeneration         |
+| POST   | /api/v1/auth/recovery-codes/regenerate/complete | Yes | Verify passkey, regenerate codes        |
+| POST   | /api/v1/auth/passkeys/begin                   | Yes  | Start adding new passkey                 |
+| POST   | /api/v1/auth/passkeys/complete                | Yes  | Finish adding new passkey                |
+| GET    | /api/v1/auth/passkeys                         | Yes  | List registered passkeys                 |
+| DELETE | /api/v1/auth/passkeys/:id                     | Yes  | Remove passkey (blocked if last one)     |
 
 ## API (Product)
 
@@ -95,6 +140,10 @@ bruno/                         # Bruno collection (API client)
 | DELETE | /api/v1/product/:id         | Yes (Admin)| Delete product    |
 | POST   | /api/v1/order               | Yes        | Process order     |
 | PATCH  | /api/v1/order/:id/status    | Yes        | Update status     |
+
+## Development approach
+
+**TDD** — tests are written before implementation. Unit tests mock DAOs and external libraries; integration tests hit a real MongoDB on a random port via `config/testServer.js`.
 
 ## Advanced Example (Orchestrator)
 

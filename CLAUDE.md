@@ -60,6 +60,8 @@ mise run setup            # full setup (Docker + install)
 
 ## Testing
 
+**TDD is the project standard.** Write tests first, then implement.
+
 ### Unit tests
 
 - Use native tools `node:test` and `node:assert` without third-party dependencies.
@@ -72,6 +74,7 @@ mise run setup            # full setup (Docker + install)
 - Test end-to-end HTTP APIs with Supertest + `node:test`
 - Start an Express server on a random port + link to a test MongoDB using `config/testServer.js`
 - Files have the `.integration.test.js` suffix co-located next to the feature (e.g. `src/api/v1/product/integration.test.js`)
+- Always cover negative scenarios: validation errors, missing auth, forbidden roles, business rule violations.
 - `mise run test:integration`
 
 ### Bruno (`bruno/`)
@@ -82,18 +85,43 @@ mise run setup            # full setup (Docker + install)
 
 ## Adding a new feature
 
+Follow TDD: write tests first, then implement.
+
 1. Create model in `src/entities/<feature>/index.js`
 2. Create `src/api/v1/<feature>/dao.js` with CRUD functions
 3. Create `src/api/v1/<feature>/service.js` with validations
 4. Create `src/api/v1/<feature>/controller.js` with routes and flat handlers
 5. Add route to `src/api/v1/router.js`
 6. Add path to `src/utils/constants.js`
-7. Add unit tests in `src/api/v1/<feature>/unit.test.js`
-8. Add integration tests in `src/api/v1/<feature>/integration.test.js`
+7. Write unit tests first in `src/api/v1/<feature>/unit.test.js`
+8. Write integration tests first in `src/api/v1/<feature>/integration.test.js`
 9. Add Bruno requests in `bruno/<feature>/`
+
+## Multi-step flow pattern (`begin/complete`)
+
+For any operation requiring two round-trips (e.g. WebAuthn, any challenge-response flow):
+
+- `POST /<resource>/begin` — server generates a challenge, stores it in-memory keyed by a random `sessionId`, returns `sessionId` + options to the client
+- `POST /<resource>/complete` — client sends back `sessionId` + response, server verifies and commits
+
+Challenges expire after 5 minutes and are purged by the cron job in `src/cron/index.js`.
+
+## Authentication
+
+Authentication uses **WebAuthn passkeys** (`@simplewebauthn/server`). No passwords.
+
+- JWT issued as `authToken` cookie: `httpOnly`, `SameSite=Strict`, `Secure` only in production
+- JWT payload: `{ userId, username, role }`, 7-day expiry, stateless
+- `handler.authenticated({ cb, roles })` verifies the cookie, populates `req.user`, returns `403` for insufficient roles
+- WebAuthn config from env: `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`, `JWT_SECRET`
+
+### Testing WebAuthn flows
+
+`@simplewebauthn/server` cannot run real ceremonies in tests. Mock `verifyRegistrationResponse` and `verifyAuthenticationResponse` using Node's `mock` module. Test all other auth endpoints (me, logout, passkeys list/delete, recover) with real HTTP + real DB.
 
 ## Conventions
 
 - ESM (`import/export`), no CommonJS
 - Biome with single quotes, trailing comma es5, semicolons always
 - `.env.develop` file for local development (automatically loaded by mise)
+- All sensitive auth errors use generic messages to prevent user enumeration (e.g. `"Invalid credentials"` regardless of whether the username exists)
