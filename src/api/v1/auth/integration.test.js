@@ -471,16 +471,17 @@ describe('Auth API — Integration', () => {
     });
 
     test('should return 400 if WebAuthn verification fails in passkeys/complete', async () => {
-      webauthn.verifyRegistrationResponse.mock.mockImplementationOnce(async () => ({
-        verified: false,
-      }));
-
+      // Register first with default mocks, then override for passkeys/complete only
       const { cookie } = await registerUser(request, 'add_passkey_fail_verify');
 
       const beginRes = await request
         .post('/api/v1/auth/passkeys/begin')
         .set('Cookie', cookie);
       const { sessionId } = beginRes.body.payload;
+
+      webauthn.verifyRegistrationResponse.mock.mockImplementationOnce(async () => ({
+        verified: false,
+      }));
 
       const res = await request
         .post('/api/v1/auth/passkeys/complete')
@@ -545,14 +546,15 @@ describe('Auth API — Integration', () => {
       assert.equal(res.status, 404);
     });
 
-    test('should return 400 for a non-ObjectId passkey id', async () => {
+    test('should return 404 for a non-ObjectId passkey id (in-memory lookup, no CastError)', async () => {
       const { cookie } = await registerUser(request, 'delete_invalid_id');
 
       const res = await request
         .delete('/api/v1/auth/passkeys/not-an-objectid')
         .set('Cookie', cookie);
 
-      assert.equal(res.status, 400);
+      // credentials.id() is an in-memory string comparison — returns null, not a CastError
+      assert.equal(res.status, 404);
     });
 
     test('should return 401 without a cookie', async () => {
