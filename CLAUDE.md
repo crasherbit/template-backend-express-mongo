@@ -85,7 +85,13 @@ mise run setup            # full setup (Docker + install)
 
 ## Adding a new feature
 
-Follow TDD: write tests first, then implement.
+Follow the Feature Development Workflow (see global CLAUDE.md §6):
+1. Interview the user one question at a time until the spec is complete
+2. Save the agreed spec to `spec/<feature>.md` before writing any code
+3. Implement in TDD order (tests first)
+4. Run an agnostic review agent after implementation
+
+
 
 1. Create model in `src/entities/<feature>/index.js`
 2. Create `src/api/v1/<feature>/dao.js` with CRUD functions
