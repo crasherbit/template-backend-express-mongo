@@ -14,12 +14,19 @@
 - Defines Express routes
 - **Orchestrator**: It is a true execution recipe. It invokes in order DB read functions (DAO), pure logic and business calculations (Service), business validity checks, and finally Database mutations.
 - Testable at "unit" level thanks to the independent export of `_testable` allowing testing by providing mocked DAOs.
+- **No `if/throw` inline** — every conditional that can throw must be extracted to a named service function (e.g. `serviceAssertX`). The controller calls that function; it never constructs the error itself.
+- **No module-level helpers or factories** — only route handler functions are defined at the controller module level. Helpers (e.g. `formatUser`, `issueSession`, `buildOptions`) belong in `service.js` or `src/utils/`.
+- **No inline object construction for complex objects** — delegate to a dedicated service or util function.
+- **No hardcoded string literals** — cookie names, regex patterns, error messages that appear more than once belong in `constants.js`.
 
 ### Service (`src/api/v1/<feature>/service.js`)
 
 - Purely mathematical logic or business rules.
 - Throws errors (`createHttpError`) if the logic fails.
 - **No schema validation or manual null-checks**, RAW input data validation is completely delegated to Mongoose at database level (Caught in handler.js).
+- Includes all **assertion/guard functions** used by the controller (functions whose only job is to check a condition and throw).
+- Includes **data transformation functions** (formatters, mappers) that have no Express dependency.
+- **Does NOT include pure utilities** (string parsers, random generators, encoders) with no business logic and no error throwing — those belong in `src/utils/`.
 
 ### DAO (`src/api/v1/<feature>/dao.js`)
 
@@ -37,6 +44,7 @@
 - `constants.js` - Route paths, Roles
 - `dbConnector.js` - MongoDB connection
 - `logger.js` - Winston + express-winston
+- Add here: pure utilities shared across features — string parsers, random generators, encoders. Rule: **no business logic, no `createHttpError`**. If a function can throw, it belongs in a service, not utils.
 
 ### App (`src/index.js`)
 
