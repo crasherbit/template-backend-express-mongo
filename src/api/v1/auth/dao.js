@@ -24,7 +24,7 @@ export const daoUpdateCredentialCounter = async (userId, credentialId, counter) 
   User.findByIdAndUpdate(
     userId,
     { $set: { 'credentials.$[elem].counter': counter } },
-    { arrayFilters: [{ 'elem.credentialId': credentialId }] },
+    { arrayFilters: [{ 'elem.credentialId': credentialId }], returnDocument: 'after' },
   );
 
 export const daoMarkRecoveryCodeUsed = async (userId, index) =>

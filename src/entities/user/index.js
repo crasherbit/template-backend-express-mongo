@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Roles, USERNAME_REGEX } from '../../../utils/constants.js';
 
 const credentialSchema = new mongoose.Schema(
   {
@@ -46,14 +47,14 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       match: [
-        /^[a-zA-Z0-9._\-]{3,25}$/,
+        USERNAME_REGEX,
         'username must be 3-25 characters, only letters, numbers, dots, underscores and hyphens',
       ],
     },
     role: {
       type: String,
-      enum: { values: ['admin', 'user'], message: 'invalid role' },
-      default: 'user',
+      enum: { values: Object.values(Roles), message: 'invalid role' },
+      default: Roles.USER,
     },
     credentials: [credentialSchema],
     recoveryCodes: [recoveryCodeSchema],

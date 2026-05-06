@@ -1,21 +1,38 @@
 import { strict as assert } from 'node:assert';
-import { describe, test } from 'node:test';
+import { describe, mock, test } from 'node:test';
 
 process.env.JWT_SECRET = 'test-unit-secret';
 
 import {
+  serviceAssertAuthenticationVerified,
   serviceAssertCredentialExists,
+  serviceAssertLoginCredentials,
+  serviceAssertLoginUserExists,
   serviceAssertNotLastCredential,
+  serviceAssertRecoveryCodeValid,
+  serviceAssertRegistrationVerified,
+  serviceAssertSessionValid,
+  serviceAssertStoredCredential,
+  serviceAssertUsernameAvailable,
+  serviceAssertUserFound,
+  serviceAssertValidUsername,
+  serviceBuildCredentialPayload,
+  serviceBuildRecoveryCodeStorage,
+  serviceClearSession,
   serviceExtractLabel,
+  serviceFormatPasskey,
+  serviceFormatUser,
   serviceGenerateJwt,
   serviceGenerateRecoveryCodes,
   serviceGenerateSessionId,
+  serviceGetCookieOptions,
   serviceHashRecoveryCode,
+  serviceIssueSession,
   serviceVerifyJwt,
   serviceVerifyRecoveryCode,
 } from './service.js';
 
-// ── serviceGenerateRecoveryCodes ────────────────────────────────────────────
+// ── serviceGenerateRecoveryCodes ─────────────────────────────────────────────
 
 describe('serviceGenerateRecoveryCodes', () => {
   test('should return exactly 8 codes', () => {
@@ -43,7 +60,7 @@ describe('serviceGenerateRecoveryCodes', () => {
   });
 });
 
-// ── serviceHashRecoveryCode ─────────────────────────────────────────────────
+// ── serviceHashRecoveryCode ──────────────────────────────────────────────────
 
 describe('serviceHashRecoveryCode', () => {
   test('should return the same hash for the same input', () => {
@@ -66,9 +83,17 @@ describe('serviceHashRecoveryCode', () => {
       serviceHashRecoveryCode('ABCD-EFGH-IJKL'),
     );
   });
+
+  test('should return empty string for null input', () => {
+    assert.equal(serviceHashRecoveryCode(null), '');
+  });
+
+  test('should return empty string for undefined input', () => {
+    assert.equal(serviceHashRecoveryCode(undefined), '');
+  });
 });
 
-// ── serviceVerifyRecoveryCode ───────────────────────────────────────────────
+// ── serviceVerifyRecoveryCode ────────────────────────────────────────────────
 
 describe('serviceVerifyRecoveryCode', () => {
   test('should return matched=true with correct index when code is valid', () => {
@@ -90,9 +115,15 @@ describe('serviceVerifyRecoveryCode', () => {
     const stored = codes.map(({ hashed }, i) => ({ code: hashed, used: i === 0 }));
     assert.equal(serviceVerifyRecoveryCode(codes[0].plain, stored).matched, false);
   });
+
+  test('should return matched=false for undefined code (no crash)', () => {
+    const codes = serviceGenerateRecoveryCodes();
+    const stored = codes.map(({ hashed }) => ({ code: hashed, used: false }));
+    assert.equal(serviceVerifyRecoveryCode(undefined, stored).matched, false);
+  });
 });
 
-// ── serviceGenerateJwt / serviceVerifyJwt ───────────────────────────────────
+// ── serviceGenerateJwt / serviceVerifyJwt ────────────────────────────────────
 
 describe('serviceGenerateJwt', () => {
   test('should generate a string token', () => {
@@ -135,7 +166,7 @@ describe('serviceVerifyJwt', () => {
   });
 });
 
-// ── serviceGenerateSessionId ────────────────────────────────────────────────
+// ── serviceGenerateSessionId ─────────────────────────────────────────────────
 
 describe('serviceGenerateSessionId', () => {
   test('should return a non-empty string', () => {
@@ -149,7 +180,7 @@ describe('serviceGenerateSessionId', () => {
   });
 });
 
-// ── serviceExtractLabel ─────────────────────────────────────────────────────
+// ── serviceExtractLabel ──────────────────────────────────────────────────────
 
 describe('serviceExtractLabel', () => {
   test('should detect iPhone', () => {
@@ -200,7 +231,7 @@ describe('serviceExtractLabel', () => {
   });
 });
 
-// ── serviceAssertCredentialExists ───────────────────────────────────────────
+// ── serviceAssertCredentialExists ────────────────────────────────────────────
 
 describe('serviceAssertCredentialExists', () => {
   test('should throw 404 when credential is null', () => {
@@ -228,7 +259,7 @@ describe('serviceAssertCredentialExists', () => {
   });
 });
 
-// ── serviceAssertNotLastCredential ──────────────────────────────────────────
+// ── serviceAssertNotLastCredential ───────────────────────────────────────────
 
 describe('serviceAssertNotLastCredential', () => {
   test('should throw 400 when only one credential remains', () => {
@@ -245,5 +276,306 @@ describe('serviceAssertNotLastCredential', () => {
     assert.doesNotThrow(() =>
       serviceAssertNotLastCredential([{ id: 'x' }, { id: 'y' }]),
     );
+  });
+});
+
+// ── serviceAssertValidUsername ───────────────────────────────────────────────
+
+describe('serviceAssertValidUsername', () => {
+  test('should not throw for a valid username', () => {
+    assert.doesNotThrow(() => serviceAssertValidUsername('alice_42'));
+  });
+
+  test('should throw 400 for a username that is too short', () => {
+    assert.throws(() => serviceAssertValidUsername('ab'), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+
+  test('should throw 400 for a username with invalid characters', () => {
+    assert.throws(() => serviceAssertValidUsername('user name!'), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+
+  test('should throw 400 for null', () => {
+    assert.throws(() => serviceAssertValidUsername(null), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+});
+
+// ── serviceAssertUsernameAvailable ───────────────────────────────────────────
+
+describe('serviceAssertUsernameAvailable', () => {
+  test('should throw 409 when user already exists', () => {
+    assert.throws(() => serviceAssertUsernameAvailable({ username: 'alice' }), (err) => {
+      assert.equal(err.status, 409);
+      return true;
+    });
+  });
+
+  test('should not throw when user is null', () => {
+    assert.doesNotThrow(() => serviceAssertUsernameAvailable(null));
+  });
+});
+
+// ── serviceAssertSessionValid ────────────────────────────────────────────────
+
+describe('serviceAssertSessionValid', () => {
+  test('should throw 400 for null session', () => {
+    assert.throws(() => serviceAssertSessionValid(null), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+
+  test('should not throw for a valid session object', () => {
+    assert.doesNotThrow(() => serviceAssertSessionValid({ challenge: 'abc', username: 'alice' }));
+  });
+});
+
+// ── serviceAssertLoginUserExists ─────────────────────────────────────────────
+
+describe('serviceAssertLoginUserExists', () => {
+  test('should throw 400 for null user (prevents enumeration in begin step)', () => {
+    assert.throws(() => serviceAssertLoginUserExists(null), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+
+  test('should not throw for an existing user', () => {
+    assert.doesNotThrow(() => serviceAssertLoginUserExists({ username: 'alice' }));
+  });
+});
+
+// ── serviceAssertLoginCredentials ────────────────────────────────────────────
+
+describe('serviceAssertLoginCredentials', () => {
+  test('should throw 401 for null user', () => {
+    assert.throws(() => serviceAssertLoginCredentials(null), (err) => {
+      assert.equal(err.status, 401);
+      return true;
+    });
+  });
+
+  test('should not throw for an existing user', () => {
+    assert.doesNotThrow(() => serviceAssertLoginCredentials({ username: 'alice' }));
+  });
+});
+
+// ── serviceAssertStoredCredential ────────────────────────────────────────────
+
+describe('serviceAssertStoredCredential', () => {
+  test('should throw 401 for null storedCred', () => {
+    assert.throws(() => serviceAssertStoredCredential(null), (err) => {
+      assert.equal(err.status, 401);
+      return true;
+    });
+  });
+
+  test('should not throw when storedCred exists', () => {
+    assert.doesNotThrow(() => serviceAssertStoredCredential({ credentialId: 'x' }));
+  });
+});
+
+// ── serviceAssertRegistrationVerified ───────────────────────────────────────
+
+describe('serviceAssertRegistrationVerified', () => {
+  test('should throw 400 when verified is false', () => {
+    assert.throws(() => serviceAssertRegistrationVerified({ verified: false }), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+
+  test('should throw 400 when verified is true but registrationInfo is missing', () => {
+    assert.throws(() => serviceAssertRegistrationVerified({ verified: true }), (err) => {
+      assert.equal(err.status, 400);
+      return true;
+    });
+  });
+
+  test('should not throw when verified and registrationInfo are present', () => {
+    assert.doesNotThrow(() =>
+      serviceAssertRegistrationVerified({ verified: true, registrationInfo: { credential: {} } }),
+    );
+  });
+});
+
+// ── serviceAssertAuthenticationVerified ─────────────────────────────────────
+
+describe('serviceAssertAuthenticationVerified', () => {
+  test('should throw 401 when verified is false', () => {
+    assert.throws(() => serviceAssertAuthenticationVerified({ verified: false }), (err) => {
+      assert.equal(err.status, 401);
+      return true;
+    });
+  });
+
+  test('should throw 401 when verified is true but authenticationInfo is missing', () => {
+    assert.throws(() => serviceAssertAuthenticationVerified({ verified: true }), (err) => {
+      assert.equal(err.status, 401);
+      return true;
+    });
+  });
+
+  test('should not throw when verified and authenticationInfo are present', () => {
+    assert.doesNotThrow(() =>
+      serviceAssertAuthenticationVerified({ verified: true, authenticationInfo: { newCounter: 1 } }),
+    );
+  });
+});
+
+// ── serviceAssertRecoveryCodeValid ───────────────────────────────────────────
+
+describe('serviceAssertRecoveryCodeValid', () => {
+  test('should throw 401 when matched is false', () => {
+    assert.throws(() => serviceAssertRecoveryCodeValid(false), (err) => {
+      assert.equal(err.status, 401);
+      return true;
+    });
+  });
+
+  test('should not throw when matched is true', () => {
+    assert.doesNotThrow(() => serviceAssertRecoveryCodeValid(true));
+  });
+});
+
+// ── serviceAssertUserFound ───────────────────────────────────────────────────
+
+describe('serviceAssertUserFound', () => {
+  test('should throw 404 for null user', () => {
+    assert.throws(() => serviceAssertUserFound(null), (err) => {
+      assert.equal(err.status, 404);
+      return true;
+    });
+  });
+
+  test('should not throw for an existing user', () => {
+    assert.doesNotThrow(() => serviceAssertUserFound({ username: 'alice' }));
+  });
+});
+
+// ── serviceFormatUser ────────────────────────────────────────────────────────
+
+describe('serviceFormatUser', () => {
+  test('should return only the expected fields', () => {
+    const user = {
+      username: 'alice',
+      role: 'user',
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-06-01'),
+      credentials: [],
+      recoveryCodes: [],
+    };
+    const result = serviceFormatUser(user);
+    assert.deepEqual(Object.keys(result).sort(), ['createdAt', 'role', 'updatedAt', 'username']);
+    assert.equal(result.username, 'alice');
+    assert.equal(result.role, 'user');
+  });
+});
+
+// ── serviceFormatPasskey ─────────────────────────────────────────────────────
+
+describe('serviceFormatPasskey', () => {
+  test('should return id as string, label, and createdAt', () => {
+    const cred = {
+      _id: { toString: () => 'cred-id-123' },
+      label: 'Chrome',
+      createdAt: new Date('2024-01-01'),
+      publicKey: Buffer.from([1, 2, 3]),
+    };
+    const result = serviceFormatPasskey(cred);
+    assert.deepEqual(Object.keys(result).sort(), ['createdAt', 'id', 'label']);
+    assert.equal(result.id, 'cred-id-123');
+    assert.equal(result.label, 'Chrome');
+  });
+});
+
+// ── serviceGetCookieOptions ──────────────────────────────────────────────────
+
+describe('serviceGetCookieOptions', () => {
+  test('should return httpOnly, sameSite, secure, and maxAge', () => {
+    const opts = serviceGetCookieOptions();
+    assert.equal(opts.httpOnly, true);
+    assert.equal(opts.sameSite, 'strict');
+    assert.equal(typeof opts.maxAge, 'number');
+    assert.ok(opts.maxAge > 0);
+  });
+
+  test('secure should be false outside production', () => {
+    const prev = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    assert.equal(serviceGetCookieOptions().secure, false);
+    process.env.NODE_ENV = prev;
+  });
+});
+
+// ── serviceBuildRecoveryCodeStorage ─────────────────────────────────────────
+
+describe('serviceBuildRecoveryCodeStorage', () => {
+  test('should map codes to { code: hashed, used: false }', () => {
+    const codes = [{ plain: 'ABCD-EFGH-IJKL', hashed: 'hash1' }];
+    const result = serviceBuildRecoveryCodeStorage(codes);
+    assert.deepEqual(result, [{ code: 'hash1', used: false }]);
+  });
+});
+
+// ── serviceBuildCredentialPayload ────────────────────────────────────────────
+
+describe('serviceBuildCredentialPayload', () => {
+  test('should build the DB storage shape from a verified credential', () => {
+    const cred = { id: 'cred-id', publicKey: new Uint8Array([1, 2, 3]), counter: 0 };
+    const credential = { response: { transports: ['internal'] } };
+    const result = serviceBuildCredentialPayload(cred, credential, 'Chrome');
+    assert.equal(result.credentialId, 'cred-id');
+    assert.ok(Buffer.isBuffer(result.publicKey));
+    assert.equal(result.counter, 0);
+    assert.deepEqual(result.transports, ['internal']);
+    assert.equal(result.label, 'Chrome');
+  });
+
+  test('should default transports to empty array when response.transports is absent', () => {
+    const cred = { id: 'cred-id', publicKey: new Uint8Array([1]), counter: 0 };
+    const credential = {};
+    const result = serviceBuildCredentialPayload(cred, credential, 'Unknown');
+    assert.deepEqual(result.transports, []);
+  });
+});
+
+// ── serviceIssueSession ──────────────────────────────────────────────────────
+
+describe('serviceIssueSession', () => {
+  test('should call res.cookie with AUTH_COOKIE_NAME and a JWT string, and return formatted user', () => {
+    const mockRes = { cookie: mock.fn() };
+    const user = {
+      _id: { toString: () => 'user-id' },
+      username: 'alice',
+      role: 'user',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const result = serviceIssueSession(mockRes, user);
+    assert.equal(mockRes.cookie.mock.calls.length, 1);
+    assert.equal(mockRes.cookie.mock.calls[0].arguments[0], 'authToken');
+    assert.equal(typeof mockRes.cookie.mock.calls[0].arguments[1], 'string');
+    assert.equal(result.username, 'alice');
+    assert.equal(result.role, 'user');
+  });
+});
+
+// ── serviceClearSession ──────────────────────────────────────────────────────
+
+describe('serviceClearSession', () => {
+  test('should call res.clearCookie with AUTH_COOKIE_NAME', () => {
+    const mockRes = { clearCookie: mock.fn() };
+    serviceClearSession(mockRes);
+    assert.equal(mockRes.clearCookie.mock.calls.length, 1);
+    assert.equal(mockRes.clearCookie.mock.calls[0].arguments[0], 'authToken');
   });
 });

@@ -109,7 +109,6 @@ describe('Auth API — Integration', () => {
   before(async () => {
     await startServer();
     request = supertest(app);
-    setupDefaultMocks();
   });
 
   after(async () => {
@@ -273,7 +272,7 @@ describe('Auth API — Integration', () => {
       assert.equal(res.status, 400);
     });
 
-    test('should return 400 if WebAuthn verification fails', async () => {
+    test('should return 401 if WebAuthn verification fails', async () => {
       webauthn.verifyAuthenticationResponse.mock.mockImplementationOnce(async () => ({
         verified: false,
         authenticationInfo: {},
@@ -288,9 +287,24 @@ describe('Auth API — Integration', () => {
 
       const res = await request
         .post('/api/v1/auth/login/complete')
-        .send({ sessionId, credential: { id: MOCK_CREDENTIAL_ID } });
+        .send({ sessionId, credential: { id: MOCK_CREDENTIAL_ID, response: {} } });
 
-      assert.equal(res.status, 400);
+      assert.equal(res.status, 401);
+    });
+
+    test('should return 401 if credential id does not match any stored credential', async () => {
+      await registerUser(request, 'login_wrong_cred');
+
+      const beginRes = await request
+        .post('/api/v1/auth/login/begin')
+        .send({ username: 'login_wrong_cred' });
+      const { sessionId } = beginRes.body.payload;
+
+      const res = await request
+        .post('/api/v1/auth/login/complete')
+        .send({ sessionId, credential: { id: 'wrong-credential-id' } });
+
+      assert.equal(res.status, 401);
     });
   });
 
@@ -333,6 +347,16 @@ describe('Auth API — Integration', () => {
 
       assert.equal(res.status, 401);
     });
+
+    test('should return 401 if code is missing', async () => {
+      await registerUser(request, 'recover_missing_code');
+
+      const res = await request
+        .post('/api/v1/auth/recover')
+        .send({ username: 'recover_missing_code' });
+
+      assert.equal(res.status, 401);
+    });
   });
 
   // ── GET /auth/me ──────────────────────────────────────────────────────
@@ -370,7 +394,7 @@ describe('Auth API — Integration', () => {
       assert.equal(res.status, 204);
       const setCookie = res.headers['set-cookie'] ?? [];
       assert.ok(
-        setCookie.some((c) => c.startsWith('authToken=;') || c.includes('authToken=;')),
+        setCookie.some((c) => c.includes('authToken=;')),
         'should clear the cookie',
       );
     });
@@ -434,9 +458,40 @@ describe('Auth API — Integration', () => {
         .set('Cookie', cookie);
       assert.equal(listRes.body.payload.length, 2);
     });
+
+    test('should return 400 for an invalid sessionId in passkeys/complete', async () => {
+      const { cookie } = await registerUser(request, 'add_passkey_bad_session');
+
+      const res = await request
+        .post('/api/v1/auth/passkeys/complete')
+        .set('Cookie', cookie)
+        .send({ sessionId: 'invalid-session', credential: { id: 'some-id' } });
+
+      assert.equal(res.status, 400);
+    });
+
+    test('should return 400 if WebAuthn verification fails in passkeys/complete', async () => {
+      webauthn.verifyRegistrationResponse.mock.mockImplementationOnce(async () => ({
+        verified: false,
+      }));
+
+      const { cookie } = await registerUser(request, 'add_passkey_fail_verify');
+
+      const beginRes = await request
+        .post('/api/v1/auth/passkeys/begin')
+        .set('Cookie', cookie);
+      const { sessionId } = beginRes.body.payload;
+
+      const res = await request
+        .post('/api/v1/auth/passkeys/complete')
+        .set('Cookie', cookie)
+        .send({ sessionId, credential: { id: 'new-id', response: {} } });
+
+      assert.equal(res.status, 400);
+    });
   });
 
-  // ── DELETE /auth/passkeys/:id ─────────────────────────────────────────
+  // ── DELETE /auth/passkeys/:id ──────────────────────────────────────────
 
   describe('DELETE /api/v1/auth/passkeys/:id', () => {
     test('should delete a passkey when more than one exists', async () => {
@@ -490,6 +545,16 @@ describe('Auth API — Integration', () => {
       assert.equal(res.status, 404);
     });
 
+    test('should return 400 for a non-ObjectId passkey id', async () => {
+      const { cookie } = await registerUser(request, 'delete_invalid_id');
+
+      const res = await request
+        .delete('/api/v1/auth/passkeys/not-an-objectid')
+        .set('Cookie', cookie);
+
+      assert.equal(res.status, 400);
+    });
+
     test('should return 401 without a cookie', async () => {
       const res = await request.delete('/api/v1/auth/passkeys/000000000000000000000001');
       assert.equal(res.status, 401);
@@ -525,6 +590,38 @@ describe('Auth API — Integration', () => {
       assert.equal(newCodes.length, 8);
       // New codes should differ from the old ones
       assert.ok(!newCodes.some((c) => oldCodes.includes(c)), 'new codes must be different');
+    });
+
+    test('should return 400 for an invalid sessionId in regen/complete', async () => {
+      const { cookie } = await registerUser(request, 'regen_bad_session');
+
+      const res = await request
+        .post('/api/v1/auth/recovery-codes/regenerate/complete')
+        .set('Cookie', cookie)
+        .send({ sessionId: 'invalid', credential: { id: MOCK_CREDENTIAL_ID } });
+
+      assert.equal(res.status, 400);
+    });
+
+    test('should return 401 if WebAuthn verification fails in regen/complete', async () => {
+      webauthn.verifyAuthenticationResponse.mock.mockImplementationOnce(async () => ({
+        verified: false,
+        authenticationInfo: {},
+      }));
+
+      const { cookie } = await registerUser(request, 'regen_fail_verify');
+
+      const beginRes = await request
+        .post('/api/v1/auth/recovery-codes/regenerate/begin')
+        .set('Cookie', cookie);
+      const { sessionId } = beginRes.body.payload;
+
+      const res = await request
+        .post('/api/v1/auth/recovery-codes/regenerate/complete')
+        .set('Cookie', cookie)
+        .send({ sessionId, credential: { id: MOCK_CREDENTIAL_ID, response: {} } });
+
+      assert.equal(res.status, 401);
     });
 
     test('should return 401 without a cookie', async () => {
