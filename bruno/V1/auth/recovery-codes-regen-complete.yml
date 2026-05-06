@@ -1,0 +1,28 @@
+info:
+  name: Regenerate Recovery Codes Complete
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/recovery-codes/regenerate/complete"
+  body:
+    type: json
+    data: |-
+      {
+        "sessionId": "{{regenSessionId}}",
+        "credential": {}
+      }
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+  - name: res.body.payload.recoveryCodes
+    value: isDefined
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

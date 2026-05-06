@@ -1,0 +1,33 @@
+info:
+  name: Login Begin
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/login/begin"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "alice"
+      }
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+  - name: res.body.payload.sessionId
+    value: isDefined
+
+script:
+  post-response: |-
+    if (res.body.payload && res.body.payload.sessionId) {
+      bru.setVar("loginSessionId", res.body.payload.sessionId);
+    }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

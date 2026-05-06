@@ -1,0 +1,27 @@
+info:
+  name: Regenerate Recovery Codes Begin
+  type: http
+  seq: 12
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/recovery-codes/regenerate/begin"
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+  - name: res.body.payload.sessionId
+    value: isDefined
+
+script:
+  post-response: |-
+    if (res.body.payload && res.body.payload.sessionId) {
+      bru.setVar("regenSessionId", res.body.payload.sessionId);
+    }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

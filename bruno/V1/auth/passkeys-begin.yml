@@ -1,0 +1,27 @@
+info:
+  name: Add Passkey Begin
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/passkeys/begin"
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+  - name: res.body.payload.sessionId
+    value: isDefined
+
+script:
+  post-response: |-
+    if (res.body.payload && res.body.payload.sessionId) {
+      bru.setVar("addPasskeySessionId", res.body.payload.sessionId);
+    }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,26 @@
+info:
+  name: Recover with Code
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/recover"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "alice",
+        "code": "XXXX-XXXX-XXXX"
+      }
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

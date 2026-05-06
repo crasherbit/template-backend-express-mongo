@@ -1,0 +1,28 @@
+info:
+  name: Login Complete
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/login/complete"
+  body:
+    type: json
+    data: |-
+      {
+        "sessionId": "{{loginSessionId}}",
+        "credential": {}
+      }
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+  - name: res.body.payload.user.username
+    value: isDefined
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

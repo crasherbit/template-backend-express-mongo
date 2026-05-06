@@ -1,0 +1,19 @@
+info:
+  name: Delete Passkey
+  type: http
+  seq: 11
+
+http:
+  method: DELETE
+  url: "{{BASE_URL}}/auth/passkeys/{{passkeyId}}"
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

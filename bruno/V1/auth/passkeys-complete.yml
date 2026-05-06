@@ -1,0 +1,26 @@
+info:
+  name: Add Passkey Complete
+  type: http
+  seq: 10
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/auth/passkeys/complete"
+  body:
+    type: json
+    data: |-
+      {
+        "sessionId": "{{addPasskeySessionId}}",
+        "credential": {}
+      }
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
