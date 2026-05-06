@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Roles, USERNAME_REGEX } from '../../../utils/constants.js';
+import { Roles, USERNAME_REGEX } from '../../utils/constants.js';
 
 const credentialSchema = new mongoose.Schema(
   {
