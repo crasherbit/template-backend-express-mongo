@@ -1,0 +1,4 @@
+name: Staging
+variables:
+  - name: BASE_URL_NO_VERSION
+    value: "{{process.env.BASE_URL_NO_VERSION}}"

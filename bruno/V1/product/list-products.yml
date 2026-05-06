@@ -1,0 +1,23 @@
+info:
+  name: List Products
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/product"
+  body:
+    type: none
+  auth: none
+
+assert:
+  - name: res.status
+    value: eq 200
+  - name: res.body.message
+    value: eq OK
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

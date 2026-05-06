@@ -1,18 +1,18 @@
-import createHttpError from 'http-errors';
-import { Roles } from './constants.js';
+import createHttpError from "http-errors";
+import { Roles } from "./constants.js";
 
 const sendResponse = (res, status, message, payload) => {
   res.status(status).send({ status, message, payload });
 };
 
 const handleError = (res, e) => {
-  if (e.name === 'ValidationError') {
+  if (e.name === "ValidationError") {
     const messages = Object.values(e.errors).map((err) => err.message);
-    return sendResponse(res, 400, 'Validation Error', messages);
+    return sendResponse(res, 400, "Validation Error", messages);
   }
 
-  if (e.name === 'CastError') {
-    return sendResponse(res, 400, 'Invalid ID format', e.message);
+  if (e.name === "CastError") {
+    return sendResponse(res, 400, "Invalid ID format", e.message);
   }
 
   if (!(e instanceof createHttpError.HttpError)) {
@@ -34,10 +34,10 @@ const wrapHandler = (cb, options = {}) => {
       const data = await cb(req, res, next);
 
       if (noContent) {
-        return sendResponse(res, 204, 'No Content', null);
+        return sendResponse(res, 204, "No Content", null);
       }
 
-      sendResponse(res, 200, 'OK', data);
+      sendResponse(res, 200, "OK", data);
     } catch (e) {
       handleError(res, e);
     }

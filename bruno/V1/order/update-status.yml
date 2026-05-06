@@ -1,0 +1,26 @@
+info:
+  name: Update Order Status
+  type: http
+  seq: 2
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/order/{{orderId}}/status"
+  body:
+    type: json
+    data: |-
+      {
+        "status": "PAID"
+      }
+  auth: none
+
+vars:
+  pre-request:
+    - name: orderId
+      value: 60c72b2f9b1d8b001c8e4d1a
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

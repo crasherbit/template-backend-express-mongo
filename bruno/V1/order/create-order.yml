@@ -1,0 +1,26 @@
+info:
+  name: Create Order
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/order"
+  body:
+    type: json
+    data: |-
+      {
+        "products": [
+          {
+            "productId": "60c72b2f9b1d8b001c8e4d1a",
+            "quantity": 2,
+            "priceAtPurchase": 20
+          }
+        ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

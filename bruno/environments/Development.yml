@@ -1,0 +1,4 @@
+name: Development
+variables:
+  - name: BASE_URL_NO_VERSION
+    value: "http://localhost:3000/api"
