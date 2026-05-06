@@ -1,14 +1,16 @@
 import { strict as assert } from 'node:assert';
 import { after, before, describe, test } from 'node:test';
 import supertest from 'supertest';
-import { app, startServer, stopServer } from '../../../../config/testServer.js';
+import { app, createTestAuthCookie, startServer, stopServer } from '../../../../config/testServer.js';
 
 let request;
+let authCookie;
 
 describe('Order API — Integration (Negative First)', () => {
   before(async () => {
     await startServer();
     request = supertest(app);
+    authCookie = createTestAuthCookie();
   });
 
   after(async () => {
@@ -19,15 +21,18 @@ describe('Order API — Integration (Negative First)', () => {
 
   describe('POST /api/v1/order (Negative Tests)', () => {
     test('should return 400 Bad Request if validation fails (e.g., quantity is 0)', async () => {
-      const res = await request.post('/api/v1/order').send({
-        products: [
-          {
-            productId: '60c72b2f9b1d8b001c8e4d1a',
-            quantity: 0,
-            priceAtPurchase: 20,
-          },
-        ],
-      });
+      const res = await request
+        .post('/api/v1/order')
+        .set('Cookie', authCookie)
+        .send({
+          products: [
+            {
+              productId: '60c72b2f9b1d8b001c8e4d1a',
+              quantity: 0,
+              priceAtPurchase: 20,
+            },
+          ],
+        });
 
       assert.equal(res.status, 400);
       assert.ok(res.body.message.includes('Validation Error'));
@@ -41,10 +46,21 @@ describe('Order API — Integration (Negative First)', () => {
           priceAtPurchase: -10,
         },
       ];
-      const res = await request.post('/api/v1/order').send({ products });
+      const res = await request
+        .post('/api/v1/order')
+        .set('Cookie', authCookie)
+        .send({ products });
 
       assert.equal(res.status, 400);
       assert.ok(res.body.message.includes('Validation Error'));
+    });
+
+    test('should return 401 without authentication', async () => {
+      const res = await request.post('/api/v1/order').send({
+        products: [{ productId: '60c72b2f9b1d8b001c8e4d1a', quantity: 1, priceAtPurchase: 5 }],
+      });
+
+      assert.equal(res.status, 401);
     });
   });
 
@@ -58,7 +74,10 @@ describe('Order API — Integration (Negative First)', () => {
         },
       ];
 
-      const res = await request.post('/api/v1/order').send({ products });
+      const res = await request
+        .post('/api/v1/order')
+        .set('Cookie', authCookie)
+        .send({ products });
 
       assert.equal(res.status, 200);
       assert.equal(res.body.message, 'OK');
@@ -70,9 +89,9 @@ describe('Order API — Integration (Negative First)', () => {
 
   describe('PATCH /api/v1/order/:id/status (Negative Tests)', () => {
     test('should return 404 for non-existent order ID', async () => {
-      // 24 character valid hex string but non existent
       const res = await request
         .patch('/api/v1/order/5f8d04f1234b0c1110e5abc8/status')
+        .set('Cookie', authCookie)
         .send({ status: 'PAID' });
 
       assert.equal(res.status, 404);
@@ -82,6 +101,7 @@ describe('Order API — Integration (Negative First)', () => {
     test('should return 400 for completely invalid ID (CastError)', async () => {
       const res = await request
         .patch('/api/v1/order/invalid-id/status')
+        .set('Cookie', authCookie)
         .send({ status: 'PAID' });
 
       assert.equal(res.status, 400);
@@ -91,6 +111,7 @@ describe('Order API — Integration (Negative First)', () => {
     test('should return 400 if transitioning to an logically unallowed status string', async () => {
       const res = await request
         .patch(`/api/v1/order/${createdId}/status`)
+        .set('Cookie', authCookie)
         .send({ status: 'MAGIC' });
 
       assert.equal(res.status, 400);
@@ -101,37 +122,38 @@ describe('Order API — Integration (Negative First)', () => {
       // First legitimately make it PAID
       const res1 = await request
         .patch(`/api/v1/order/${createdId}/status`)
+        .set('Cookie', authCookie)
         .send({ status: 'PAID' });
       assert.equal(
         res1.status,
         200,
-        `Expected 200 for PAID, got ${res1.status}: ${JSON.stringify(res1.body)}`
+        `Expected 200 for PAID, got ${res1.status}: ${JSON.stringify(res1.body)}`,
       );
 
       // Then legitimately make it SHIPPED
       const res2 = await request
         .patch(`/api/v1/order/${createdId}/status`)
+        .set('Cookie', authCookie)
         .send({ status: 'SHIPPED' });
       assert.equal(
         res2.status,
         200,
-        `Expected 200 for SHIPPED, got ${res2.status}: ${JSON.stringify(res2.body)}`
+        `Expected 200 for SHIPPED, got ${res2.status}: ${JSON.stringify(res2.body)}`,
       );
 
       // Then attempt to go back
       const res3 = await request
         .patch(`/api/v1/order/${createdId}/status`)
+        .set('Cookie', authCookie)
         .send({ status: 'PENDING' });
 
       assert.equal(
         res3.status,
         400,
-        `Expected 400 for PENDING, got ${res3.status}: ${JSON.stringify(res3.body)}`
+        `Expected 400 for PENDING, got ${res3.status}: ${JSON.stringify(res3.body)}`,
       );
       assert.ok(
-        res3.body.message.includes(
-          'Cannot transition order from SHIPPED to PENDING'
-        )
+        res3.body.message.includes('Cannot transition order from SHIPPED to PENDING'),
       );
     });
   });

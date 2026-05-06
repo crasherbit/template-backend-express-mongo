@@ -1,5 +1,8 @@
 import createHttpError from "http-errors";
+import jwt from "jsonwebtoken";
 import { Roles } from "./constants.js";
+
+const COOKIE_NAME = "authToken";
 
 const sendResponse = (res, status, message, payload) => {
   res.status(status).send({ status, message, payload });
@@ -16,19 +19,44 @@ const handleError = (res, e) => {
   }
 
   if (!(e instanceof createHttpError.HttpError)) {
-    e = createHttpError.InternalServerError();
+    e = createHttpError.InternalServerError({
+      message: "An unexpected error occurred",
+      payload: {
+        originalError: e.message,
+        stack: e.stack,
+      },
+    });
   }
-  sendResponse(res, e.status, e.message, e);
+  sendResponse(res, e.status, e.message, e.payload || e);
+};
+
+const verifyJwtFromCookie = (req) => {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (!token) throw createHttpError.Unauthorized("Authentication required");
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    throw createHttpError.Unauthorized("Invalid or expired token");
+  }
 };
 
 const wrapHandler = (cb, options = {}) => {
-  const { authenticated = false, noContent = false } = options;
+  const {
+    authenticated = false,
+    roles = Object.values(Roles),
+    noContent = false,
+  } = options;
 
   return async (req, res, next) => {
     try {
       if (authenticated) {
-        // TODO: implement authentication logic (JWT verify, set req.user)
-        req.user = {};
+        const payload = verifyJwtFromCookie(req);
+        // `id` alias allows existing code that reads req.user.id to keep working
+        req.user = { ...payload, id: payload.userId };
+
+        if (roles.length > 0 && !roles.includes(req.user.role)) {
+          throw createHttpError.Forbidden("Insufficient permissions");
+        }
       }
 
       const data = await cb(req, res, next);
@@ -45,8 +73,8 @@ const wrapHandler = (cb, options = {}) => {
 };
 
 export const handler = {
-  authenticated: ({ cb, roles = Object.values(Roles) }) => {
-    return wrapHandler(cb, { authenticated: true, roles });
+  authenticated: ({ cb, roles = Object.values(Roles), noContent = false }) => {
+    return wrapHandler(cb, { authenticated: true, roles, noContent });
   },
   public: (cb) => {
     return wrapHandler(cb);

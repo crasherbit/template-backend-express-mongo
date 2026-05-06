@@ -1,4 +1,5 @@
 export const Path = Object.freeze({
+  AUTH: '/auth',
   PRODUCT: '/product',
   ORDER: '/order',
 });

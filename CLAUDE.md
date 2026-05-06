@@ -125,3 +125,14 @@ Authentication uses **WebAuthn passkeys** (`@simplewebauthn/server`). No passwor
 - Biome with single quotes, trailing comma es5, semicolons always
 - `.env.develop` file for local development (automatically loaded by mise)
 - All sensitive auth errors use generic messages to prevent user enumeration (e.g. `"Invalid credentials"` regardless of whether the username exists)
+
+## Reuse before writing
+
+Before writing a new value, function, or pattern, check whether the codebase already provides it:
+
+- **Constants / enums**: if a value is already defined (e.g. `Roles` in `constants.js`), import and use it — never hardcode the same string or number inline.
+- **Utility functions**: check `src/utils/` and the relevant feature's `service.js` before implementing logic that may already exist.
+- **Test helpers**: check `config/testServer.js` for existing helpers (e.g. `createTestAuthCookie`) before rolling custom setup code in a test file.
+- **Patterns**: follow established patterns in the codebase (e.g. `handler.js` error handling, `begin/complete` flow) rather than inventing alternatives.
+
+This applies especially when creating a new file from scratch, where the tendency is to write everything locally without checking what already exists.
