@@ -1,5 +1,6 @@
 import express from 'express';
 import { Path } from '../../utils/constants.js';
+import { auth } from './auth/controller.js';
 import { order } from './order/controller.js';
 import { product } from './product/controller.js';
 
@@ -13,5 +14,6 @@ router.get('/health', (_req, res) => {
   });
 });
 
+router.use(Path.AUTH, auth);
 router.use(Path.PRODUCT, product);
 router.use(Path.ORDER, order);
