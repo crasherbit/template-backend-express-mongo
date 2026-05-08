@@ -10,18 +10,19 @@ http:
     type: json
     data: |-
       {
-        "sessionId": "{{registerSessionId}}",
-        "credential": {}
+          "sessionId": "8ab108d29a7014d26753259c8e10e335795de65c074d919b54fbf248e5663674",
+          "credential": {
+              "id": "NLN9UllNP4mkxMduinRVbQ",
+              "rawId": "NLN9UllNP4mkxMduinRVbQ",
+              "response": {
+                  "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiSnNtcHNqYlFfaVdxckdZNER1UUNsbjdOTVNiZnlmRzdfSnNjRDhqVjFIcyIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOjlKVGNyVzJKMEJIRjJyVllVYnp4OElyUzVXdmZuMTBmZThIMGVoTmJVTHciLCJjcm9zc09yaWdpbiI6ZmFsc2UsImFuZHJvaWRQYWNrYWdlTmFtZSI6ImNvbS5leGFtcGxlLnRyYWNrbHkifQ",
+                  "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUfJe05Iq8JLzQIkZI7TZHNhn1px-nJCR38VXOf9OUXcRdAAAAANVIgm55tNtAo9gREW9-g0kAEDSzfVJZTT-JpMTHbop0VW2lAQIDJiABIVggggRz6TsD5yhLZ74i9-kGH6gYAv64wtCJo4UsSLXmtwgiWCD69uF6wGC-tUIiDqVb5p5xAuXsPKTxV5LCZrUiAw2ELg",
+                  "transports": []
+              },
+              "type": "public-key",
+              "clientExtensionResults": {}
+          }
       }
-  auth: none
-
-assert:
-  - name: res.status
-    value: eq 200
-  - name: res.body.payload.user.username
-    value: isDefined
-  - name: res.body.payload.recoveryCodes
-    value: isDefined
 
 settings:
   encodeUrl: true

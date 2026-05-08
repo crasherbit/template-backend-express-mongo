@@ -95,7 +95,7 @@ async function registerComplete(req, res) {
   const verification = await verifyRegistrationResponse({
     response: credential,
     expectedChallenge: session.challenge,
-    expectedOrigin: process.env.WEBAUTHN_ORIGIN,
+    expectedOrigin: [process.env.WEBAUTHN_ORIGIN, process.env.WEBAUTHN_ANDROID_ORIGIN].filter(Boolean),
     expectedRPID: process.env.WEBAUTHN_RP_ID,
   });
   serviceAssertRegistrationVerified(verification);
@@ -147,7 +147,7 @@ async function loginComplete(req, res) {
   const verification = await verifyAuthenticationResponse({
     response: credential,
     expectedChallenge: session.challenge,
-    expectedOrigin: process.env.WEBAUTHN_ORIGIN,
+    expectedOrigin: [process.env.WEBAUTHN_ORIGIN, process.env.WEBAUTHN_ANDROID_ORIGIN].filter(Boolean),
     expectedRPID: process.env.WEBAUTHN_RP_ID,
     credential: {
       id: storedCred.credentialId,
@@ -231,7 +231,7 @@ async function regenComplete(req) {
   const verification = await verifyAuthenticationResponse({
     response: credential,
     expectedChallenge: session.challenge,
-    expectedOrigin: process.env.WEBAUTHN_ORIGIN,
+    expectedOrigin: [process.env.WEBAUTHN_ORIGIN, process.env.WEBAUTHN_ANDROID_ORIGIN].filter(Boolean),
     expectedRPID: process.env.WEBAUTHN_RP_ID,
     credential: {
       id: storedCred.credentialId,
@@ -281,7 +281,7 @@ async function addPasskeyComplete(req) {
   const verification = await verifyRegistrationResponse({
     response: credential,
     expectedChallenge: session.challenge,
-    expectedOrigin: process.env.WEBAUTHN_ORIGIN,
+    expectedOrigin: [process.env.WEBAUTHN_ORIGIN, process.env.WEBAUTHN_ANDROID_ORIGIN].filter(Boolean),
     expectedRPID: process.env.WEBAUTHN_RP_ID,
   });
   serviceAssertRegistrationVerified(verification);

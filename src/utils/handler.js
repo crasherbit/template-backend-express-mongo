@@ -20,6 +20,11 @@ const handleError = (res, e) => {
     const payload = { originalMessage: e.message, stack: e.stack };
     e = createHttpError.InternalServerError();
     e.payload = payload;
+    // if dev log stqck trace for debugging
+    if (process.env.NODE_ENV !== "production") {
+      // biome-ignore lint/suspicious/noConsole: error log
+      console.log("Unexpected error:", payload);
+    }
   }
   sendResponse(res, e.status, e.message, e.payload || e);
 };

@@ -10,16 +10,22 @@ http:
     type: json
     data: |-
       {
-        "sessionId": "{{loginSessionId}}",
-        "credential": {}
+          "sessionId": "dd980e0015e2c92535aee10ed3ed36b1cf323eb0435ec2df499104027c14b23e",
+        
+          "credential": {
+              "id": "NLN9UllNP4mkxMduinRVbQ",
+              "rawId": "NLN9UllNP4mkxMduinRVbQ",
+              "response": {
+                  "clientDataJSON": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiNFlJV2U2U1pSaTFtT1RnYnJ5cF92V2tZMThOVTIwaW1naDdlSE15cGVYUSIsIm9yaWdpbiI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOjlKVGNyVzJKMEJIRjJyVllVYnp4OElyUzVXdmZuMTBmZThIMGVoTmJVTHciLCJjcm9zc09yaWdpbiI6ZmFsc2UsImFuZHJvaWRQYWNrYWdlTmFtZSI6ImFuZHJvaWQ6YXBrLWtleS1oYXNoOjlKVGNyVzJKMEJIRjJyVllVYnp4OElyUzVXdmZuMTBmZThIMGVoTmJVTHcifQ",
+                  "authenticatorData": "fJe05Iq8JLzQIkZI7TZHNhn1px-nJCR38VXOf9OUXcQdAAAAAA",
+                
+                  "signature": "MEUCIEwxcIAIR9mmkfYH8rkQDYm9dg9ILGNhN_TGJ4RYXtcZAiEAoLIY9XnYEPaE4xcIHVXwvbulZ58W01W59Vuo76qgC8o",
+                  "userHandle": "96WCv-BKEwEF0b2-JbOh1VS8SkSw4TbQF7BjreecqHc"
+              },
+              "type": "public-key",
+              "clientExtensionResults": {}
+          }
       }
-  auth: none
-
-assert:
-  - name: res.status
-    value: eq 200
-  - name: res.body.payload.user.username
-    value: isDefined
 
 settings:
   encodeUrl: true

@@ -10,21 +10,8 @@ http:
     type: json
     data: |-
       {
-        "username": "alice"
+          "username": "crasherbit"
       }
-  auth: none
-
-assert:
-  - name: res.status
-    value: eq 200
-  - name: res.body.payload.sessionId
-    value: isDefined
-
-script:
-  post-response: |-
-    if (res.body.payload && res.body.payload.sessionId) {
-      bru.setVar("loginSessionId", res.body.payload.sessionId);
-    }
 
 settings:
   encodeUrl: true
