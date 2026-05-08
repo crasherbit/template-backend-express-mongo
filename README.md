@@ -110,6 +110,50 @@ JWT is set as `authToken` httpOnly cookie (7 days). Protected routes require the
 | `WEBAUTHN_RP_ID` | Relying party domain (e.g. `example.com`) |
 | `WEBAUTHN_RP_NAME` | App name shown during passkey creation |
 | `WEBAUTHN_ORIGIN` | Full origin (e.g. `https://example.com`) |
+| `WEBAUTHN_ANDROID_ORIGIN` | Android native origin (see local testing below) |
+
+### Local testing on Android (passkeys)
+
+WebAuthn passkeys on a real Android device require three things:
+
+1. **A real domain with HTTPS** — Android's CredentialManager verifies `https://{rpId}/.well-known/assetlinks.json` via the system network, so `localhost` + `adb reverse` is not enough. Use [ngrok](https://ngrok.com) to expose the server:
+
+   ```bash
+   ngrok http 3000
+   # → https://<subdomain>.ngrok-free.app
+   ```
+
+2. **Digital Asset Links** — the file at `/.well-known/assetlinks.json` (served by this Express app) must include the app's SHA256 certificate fingerprint. Get the debug key fingerprint:
+
+   ```bash
+   keytool -list -v \
+     -keystore ~/.android/debug.keystore \
+     -alias androiddebugkey \
+     -storepass android -keypass android 2>/dev/null \
+     | grep "SHA256:"
+   ```
+
+   The fingerprint in `src/app.js` is already set to the standard debug keystore value (`F4:94:DC:AD...`). If you use a different keystore, update it there.
+
+3. **Android APK key hash origin** — Android native passkeys send `android:apk-key-hash:<base64url>` as the WebAuthn origin instead of an HTTPS URL. Set `WEBAUTHN_ANDROID_ORIGIN` to this value so the server accepts it. The hash is the base64url encoding of the binary SHA256 fingerprint above.
+
+**Complete `.env.develop` for local Android testing:**
+
+```dotenv
+WEBAUTHN_RP_ID=<subdomain>.ngrok-free.app
+WEBAUTHN_RP_NAME="Your App"
+WEBAUTHN_ORIGIN=https://<subdomain>.ngrok-free.app
+WEBAUTHN_ANDROID_ORIGIN=android:apk-key-hash:<base64url-hash>
+```
+
+**Flutter `.env` (in the Flutter project root):**
+
+```dotenv
+API_URL=https://<subdomain>.ngrok-free.app
+WEBAUTHN_RP_ID=<subdomain>.ngrok-free.app
+```
+
+> **Note:** The ngrok free tier URL changes on every restart. Update both `.env.develop` and the Flutter `.env` each time. A [static ngrok domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) (one per free account) avoids this.
 
 ### Auth endpoints
 
