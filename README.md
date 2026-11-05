@@ -29,8 +29,8 @@ Fully managed by [mise](https://mise.jdx.dev):
 
 ## Commands (mise tasks)
 
-| Command                     | Description                                       |
-| --------------------------- | ------------------------------------------------- |
+| Command                       | Description                                       |
+| ----------------------------- | ------------------------------------------------- |
 | `mise run dev`              | Start in dev with nodemon                         |
 | `mise run start`            | Start in production                               |
 | `mise run test`             | Unit test (node:test, no Docker)                  |
@@ -86,15 +86,15 @@ bruno/                         # Bruno collection (API client)
 
 ## API (Product)
 
-| Method | Endpoint                    | Auth       | Description       |
-| ------ | --------------------------- | ---------- | ----------------- |
-| GET    | /api/v1/product             | No         | List products     |
-| GET    | /api/v1/product/:id         | No         | Single product    |
-| POST   | /api/v1/product             | Yes        | Create product    |
-| PUT    | /api/v1/product/:id         | Yes        | Update product    |
-| DELETE | /api/v1/product/:id         | Yes (Admin)| Delete product    |
-| POST   | /api/v1/order               | Yes        | Process order     |
-| PATCH  | /api/v1/order/:id/status    | Yes        | Update status     |
+| Method | Endpoint                 | Auth        | Description    |
+| ------ | ------------------------ | ----------- | -------------- |
+| GET    | /api/v1/product          | No          | List products  |
+| GET    | /api/v1/product/:id      | No          | Single product |
+| POST   | /api/v1/product          | Yes         | Create product |
+| PUT    | /api/v1/product/:id      | Yes         | Update product |
+| DELETE | /api/v1/product/:id      | Yes (Admin) | Delete product |
+| POST   | /api/v1/order            | Yes         | Process order  |
+| PATCH  | /api/v1/order/:id/status | Yes         | Update status  |
 
 ## Advanced Example (Orchestrator)
 
@@ -103,3 +103,7 @@ Check `src/api/v1/order/controller.js` to see how the architecture supports comp
 ## Adding a feature
 
 See `CLAUDE.md` for detailed instructions and conventions.
+
+
+
+JUST A TEST
